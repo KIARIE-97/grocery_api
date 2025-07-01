@@ -1,0 +1,50 @@
+import { Order } from "src/orders/entities/order.entity";
+import { User } from "src/users/entities/user.entity";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+
+export enum SStatus{
+    ACTIVE= 'active',
+    INACTIVE= 'inactive',
+}
+
+@Entity()
+export class Store {
+  @PrimaryGeneratedColumn('increment')
+  id: number;
+  @Column()
+  store_name: string;
+
+  @Column()
+  location: string;
+
+  @Column()
+  is_verified: boolean;
+
+  @Column({type: 'enum', enum: SStatus, default: SStatus.ACTIVE})
+  status: SStatus;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  created_at: Date;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updated_at: Date;
+
+  @ManyToOne(() => User, (user) => user.id, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+    user: User['id'];
+
+  @OneToMany(() => Order, (order) => order.store, {
+      cascade: ['insert', 'update'], // this allows the order to be created/updated/deleted with the store
+      nullable: true,
+    })
+    orders: Store[];  
+}
