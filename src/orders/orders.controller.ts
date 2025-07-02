@@ -2,14 +2,16 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Req } 
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
+@Public()
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+    return this.ordersService.createOrder(createOrderDto);
   }
 
   @Get()
@@ -20,6 +22,22 @@ export class OrdersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ordersService.findOne(+id);
+  }
+
+  @Patch(':orderId/assign-store/:storeId')
+  async assignStore(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('storeId', ParseIntPipe) storeId: number,
+  ) {
+    return this.ordersService.assignStore(orderId, storeId);
+  }
+
+  @Patch(':orderId/assign-driver/:driverId')
+  async assignDriver(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('driverId', ParseIntPipe) driverId: number,
+  ) {
+    return this.ordersService.assignDriver(orderId, driverId);
   }
 
   @Patch(':id')

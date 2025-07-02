@@ -1,11 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { isEnum, IsEnum, IsNumber } from "class-validator";
+import { IsDateString, isEnum, IsEnum, IsNumber, IsOptional } from "class-validator";
 import { OStatus, paymentMethod, paymentStatus } from "../entities/order.entity";
 
 export class CreateOrderDto {
   @ApiProperty({
     description: 'The total cost of the order',
-    example: 'ksh.50.00',
+    example: '50.00',
     required: true,
   })
   @IsNumber()
@@ -13,7 +13,7 @@ export class CreateOrderDto {
 
   @ApiProperty({
     description: 'The tax on the current order',
-    example: 'ksh.50.00',
+    example: '50.00',
     required: true,
   })
   @IsNumber()
@@ -37,32 +37,34 @@ export class CreateOrderDto {
 
   @ApiProperty({
     description: 'The status of the payment',
-    example: 'ksh.50.00',
+    example: 'pending',
   })
   @IsEnum(paymentStatus, { message: 'payment_status' })
-  payment_status: paymentStatus= paymentStatus.PENDING;
+  payment_status: paymentStatus = paymentStatus.PENDING;
 
   @ApiProperty({
     description: 'The tax on the current order',
     example: '2023-10-01',
     required: true,
   })
-  @IsNumber()
-  delivery_schedule_at: number;
+  @IsDateString()
+  delivery_schedule_at: string;
 
   @ApiProperty({
     description: 'The driver id',
     example: '1',
-    required: true,
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
   driver_id: number;
 
   @ApiProperty({
     description: 'The store id',
     example: '1',
-    required: true,
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
   store_id: number;
 

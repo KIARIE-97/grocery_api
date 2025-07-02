@@ -40,6 +40,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ type: 'text', nullable: true, default: null })
+  hashedRefreshToken: string | null;
+
   @Column()
   phone_number: string;
 

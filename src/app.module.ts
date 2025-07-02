@@ -6,6 +6,11 @@ import { StoresModule } from './stores/stores.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { DriversModule } from './drivers/drivers.module';
+import { AuthModule } from './auth/auth.module';
+import { AtGuard } from './auth/guards/at.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { ProductsModule } from './products/products.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -18,8 +23,16 @@ import { DriversModule } from './drivers/drivers.module';
     StoresModule,
     DatabaseModule,
     DriversModule,
+    AuthModule,
+    ProductsModule,
+    CategoryModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AtGuard, // Use AuthModule to provide global authentication guard
+    },
+  ],
 })
 export class AppModule {}

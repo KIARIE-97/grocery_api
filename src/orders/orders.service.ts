@@ -95,13 +95,19 @@ export class OrdersService {
       throw new NotFoundException('Invalid customer');
     }
 
+    const deliveryDate = new Date(createOrderDto.delivery_schedule_at);
+    const deliveryDateString = deliveryDate.toISOString().split('T')[0];
+        if (isNaN(deliveryDate.getTime())) {
+          throw new BadRequestException('Invalid delivery schedule date');
+        }
+
     const newOrder = this.OrderRepository.create({
       total_amount: createOrderDto.total_amount,
       tax_amount: createOrderDto.tax_amount,
-      status: 'pending',
+      status: OStatus.PENDING,
       payment_method: createOrderDto.payment_method,
       payment_status: createOrderDto.payment_status,
-      delivery_schedule_at: createOrderDto.delivery_schedule_at,
+      delivery_schedule_at: deliveryDateString,
       customer,
     });
 
@@ -119,7 +125,7 @@ export class OrdersService {
     });
     if (!store) throw new NotFoundException('Store not found');
 
-    order.store = store.id;
+    order.store = store;
     order.status = OStatus.READY_FOR_PICKUP; 
     return await this.OrderRepository.save(order);
   }
@@ -194,8 +200,8 @@ export class OrdersService {
 
     // Customer can cancel own order only (before 24 hrs)
     if (isCustomer) {
-      const isOwner = order.customer === currentUser.id;
-      const cancelDeadline = new Date(order.delivery_schedule_at); // adjust property name if needed
+      const isOwner = order.customer.id === currentUser.id;
+      const cancelDeadline = new Date(order.delivery_schedule_at); 
       cancelDeadline.setHours(cancelDeadline.getHours() - 24);
       const now = new Date();
 

@@ -1,15 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBadRequestResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Role } from './entities/user.entity';
+import { Roles } from 'src/auth/decorators/role.decorator';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@Controller('users')
+interface AuthenticatedRequest extends Request {
+  user: any; // or specify the user type if you have one
+}
+
+@UseGuards(RolesGuard)
 @ApiTags('Users')
+@Controller('users')
 @ApiUnauthorizedResponse({ description: 'Authentication required' })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Roles(Role.ADMIN)
+  // @Public()
   @Post()
   @ApiOperation({
     summary: 'Create a new user',
@@ -21,6 +33,8 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  // @Roles(Role.ADMIN, Role.SUB_ADMIN)
+  @Public()
   @Get()
   @ApiOperation({
     summary: 'Get all users',
@@ -32,6 +46,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('profile')
+  async getMyProfile(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    return this.usersService.myProfile(userId, userId);
+  }
+
+  @Roles(Role.ADMIN, Role.SUB_ADMIN)
   @Get(':id')
   @ApiOperation({
     summary: 'Get user by ID',
@@ -55,6 +76,20 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @Public()
+  @Patch(':id/reset-password')
+  @ApiOperation({
+    summary: 'Reset user password',
+    description: 'Resets the password for a user by their ID.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required' })
+  resetUserPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return this.usersService.resetPassword(id, dto.newPassword);
   }
 
   @Delete(':id')

@@ -74,14 +74,14 @@ export class Order {
     nullable: true,
     onDelete: 'CASCADE',
   })
-  store: Store['id'];
+  store: Store;
 
   @ManyToOne(() => User, (user) => user.id, {
     cascade: true,
     nullable: true,
     onDelete: 'CASCADE',
   })
-  customer: User['id'];
+  customer: User;
 
 //   product_ids: number[]; // Assuming this is an array of product IDs
 }
