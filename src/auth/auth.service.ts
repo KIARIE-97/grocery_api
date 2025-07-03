@@ -10,6 +10,9 @@ import { Store } from 'src/stores/entities/store.entity';
 import * as Bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { AppMailerService } from 'src/mailer/mailer.service';
+import * as otpGenerator from 'otp-generator';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +22,8 @@ export class AuthService {
     @InjectRepository(Order) private orderRepository: Repository<Order>,
     @InjectRepository(Store) private storeRepository: Repository<Store>,
     private configService: ConfigService,
+    private readonly appMailerService: AppMailerService,
+
     private jwtService: JwtService,
   ) {}
   private async hashData(data: string): Promise<string> {
@@ -77,7 +82,7 @@ export class AuthService {
   async signIn(createAuthDto: CreateAuthDto) {
     const founduser = await this.userRepository.findOne({
       where: { email: createAuthDto.email },
-      select: ['id', 'email', 'password', 'role'],
+      select: ['id', 'email', 'password', 'role', 'otp'],
     });
     if (!founduser) {
       throw new Error(`User with email ${createAuthDto.email} not found`);
@@ -91,6 +96,10 @@ export class AuthService {
       throw new NotFoundException(
         `wrong credentials for user with email ${createAuthDto.email}`,
       );
+    }
+
+    if (createAuthDto.otp !== founduser.otp) {
+      throw new NotFoundException('Invalid OTP');
     }
 
     // after password is validated and before generating tokens:
@@ -111,9 +120,10 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.getTokens(
       founduser.id,
       founduser.email,
-      founduser.role, 
+      founduser.role,
     );
 
+    founduser.is_active = true; // Ensure user is active
 
     await this.saveRefreshToken(founduser.id, refreshToken);
 
@@ -164,48 +174,58 @@ export class AuthService {
     return { accessToken, refreshToken: newrefreshToken };
   }
   //signup user
-  async SignUp(createAuthDto: CreateAuthDto) {
+  async SignUp(createUserDto: CreateUserDto) {
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { email: createAuthDto.email },
-      select: ['id', 'email', 'password'], 
+      where: { email: createUserDto.email },
+      select: ['id', 'email', 'password'],
     });
     if (existingUser) {
       throw new Error('User already exists');
     }
+
+    // Generate OTP (6-digit numeric)
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+
     // hash password
-    const hashedPassword = await Bcrypt.hash(createAuthDto.password, 10);
+    const hashedPassword = await Bcrypt.hash(createUserDto.password, 10);
 
     // create and save new user
     const user = this.userRepository.create({
-      ...createAuthDto,
+      full_name: createUserDto.full_name,
+      email: createUserDto.email,
+      phone_number: createUserDto.phone_number,
       password: hashedPassword,
-      // status: UStatus.PENDING,
+      otp: otp,
     });
     // generate tokens
     const savedUser = await this.userRepository.save(user);
     const { accessToken, refreshToken } = await this.getTokens(
       savedUser.id,
       savedUser.email,
-      savedUser.role, 
+      savedUser.role,
     );
     // Save refresh token in the database
     await this.saveRefreshToken(savedUser.id, refreshToken);
 
-    // Return user and tokens
     // Fetch updated user (with hashedRefreshToken)
     const updatedUser = await this.userRepository.findOne({
       where: { id: savedUser.id },
     });
-    // try {
-    //   await this.appMailerService.sendWelcomeMail(
-    //     savedUser.email,
-    //     savedUser.first_name,
-    //     accessToken,
-    //   );
-    // } catch (err) {
-    //   console.error('Error sending welcome email:', err);
-    // }
-    return { user: updatedUser, accessToken, refreshToken };
+    try {
+      await this.appMailerService.sendWelcomeMail(
+        savedUser.email,
+        savedUser.full_name,
+        accessToken,
+        otp,
+      );
+    } catch (err) {
+      console.error('Error sending welcome email:', err);
+    }
+    return { user: updatedUser };
   }
 }

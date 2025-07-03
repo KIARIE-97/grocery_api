@@ -41,6 +41,9 @@ export class User {
   password: string;
 
   @Column({ type: 'text', nullable: true, default: null })
+  otp: string | null;
+
+  @Column({ type: 'text', nullable: true, default: null })
   hashedRefreshToken: string | null;
 
   @Column()
@@ -49,10 +52,10 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.CUSTOMER })
   role: Role;
 
-  @Column()
+  @Column({type: 'text', nullable: true, default: null})
   profile_url: string;
 
-  @Column()
+  @Column({type: 'boolean', default: false})
   is_active: boolean;
 
   @Column({

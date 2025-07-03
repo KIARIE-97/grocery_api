@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateAuthDto {
   @ApiProperty({
@@ -21,4 +21,12 @@ export class CreateAuthDto {
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  @ApiProperty({
+    description: 'The OTP for user verification',
+    example: 123456,
+    required: true,
+  })
+  @IsString()
+  otp: string;
 }

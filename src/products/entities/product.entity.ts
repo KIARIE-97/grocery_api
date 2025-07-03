@@ -1,3 +1,4 @@
+import { Category } from "src/category/entities/category.entity";
 import { Order } from "src/orders/entities/order.entity";
 import { Store } from "src/stores/entities/store.entity";
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
@@ -64,4 +65,8 @@ export class Product {
   })
   @JoinTable({ name: 'order_items' })
   orders: Relation<Order[]>;
+
+  @ManyToMany(() => Category, (category) => category.products)
+  categorys: Relation<Category[]>;
+
 }

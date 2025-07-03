@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Search, Query, Parse
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { ApiBadRequestResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
 @Controller('drivers')
+@ApiBearerAuth('access-token')
 @ApiTags('Drivers')
 @ApiUnauthorizedResponse({ description: 'Authentication required' })
 export class DriversController {

@@ -5,6 +5,7 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { ApiBadRequestResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 import { RtGuard } from './guards/rt.guard';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 export interface RequestWithUser extends Request {
   user: {
@@ -87,7 +88,7 @@ export class AuthController {
   //signup user
   @Public() // This endpoint is accessible without authentication
   @Post('signup')
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.SignUp(createAuthDto);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.authService.SignUp(createUserDto);
   }
 }

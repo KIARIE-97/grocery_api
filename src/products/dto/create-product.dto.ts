@@ -72,4 +72,11 @@ export class CreateProductDto {
     required: true,
   })
   image_url: string;
+
+  @ApiProperty({
+    description: 'The category ids',
+    example: '1',
+    })
+  @IsNumber()
+  category_ids: [];
 }

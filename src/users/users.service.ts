@@ -33,9 +33,7 @@ export class UsersService {
       email: createUserDto.email,
       password: await this.hashData(createUserDto.password),
       phone_number: createUserDto.phone_number,
-      role: createUserDto.role,
       profile_url: createUserDto.profile_url,
-      is_active: createUserDto.is_active ?? false,
     };
     const savedUser = await this.userRepository.save(newUser);
     return this.excludePassword(savedUser);
@@ -80,7 +78,12 @@ export class UsersService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User | string> {
-    await this.userRepository.update(id, updateUserDto);
+    // Convert otp to string if present
+    const updateData = { ...updateUserDto } as any;
+    if (updateData.otp !== undefined && updateData.otp !== null) {
+      updateData.otp = String(updateData.otp);
+    }
+    await this.userRepository.update(id, updateData);
 
     return await this.findOne(id);
   }

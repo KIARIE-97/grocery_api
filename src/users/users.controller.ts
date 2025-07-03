@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGua
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBadRequestResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from './entities/user.entity';
 import { Roles } from 'src/auth/decorators/role.decorator';
@@ -14,6 +14,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @UseGuards(RolesGuard)
+@ApiBearerAuth('access-token')
 @ApiTags('Users')
 @Controller('users')
 @ApiUnauthorizedResponse({ description: 'Authentication required' })
@@ -78,6 +79,7 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @Roles(Role.ADMIN, Role.CUSTOMER)
   @Public()
   @Patch(':id/reset-password')
   @ApiOperation({
@@ -92,6 +94,7 @@ export class UsersController {
     return this.usersService.resetPassword(id, dto.newPassword);
   }
 
+  @Public()
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete a user',

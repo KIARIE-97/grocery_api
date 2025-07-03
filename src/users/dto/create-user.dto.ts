@@ -1,7 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsEmail,
   IsEnum,
+  IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 import { Role } from "../entities/user.entity";
@@ -29,6 +32,15 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    description: 'The OTP for user verification',
+    example: 123456,
+    required: true,
+  })
+  @IsOptional()
+  @IsString()
+  otp: string;
+
+  @ApiProperty({
     description: 'The phone number of the user',
     example: '+1234567890',
     required: true,
@@ -36,20 +48,19 @@ export class CreateUserDto {
   @IsString()
   phone_number: string;
 
-  @ApiProperty()
-  @IsEnum(Role, {
-    message: 'Role must be one of the following: CUSTOMER, ADMIN, DRIVER, STORE_OWNER',
-  })
-  role: Role = Role.CUSTOMER;
+  // @ApiProperty()
+  // @IsEnum(Role, {
+  //   message: 'Role must be one of the following: CUSTOMER, ADMIN, DRIVER, STORE_OWNER',
+  // })
+  // role: Role = Role.CUSTOMER;
 
-  @ApiProperty({
-    description: 'The profile URL of the user',
-    example: 'https://example.com/profile/user123',
-    required: true,
-  })
+
+  @IsOptional()
   @IsString()
   profile_url: string;
 
-  @ApiProperty({ default: false })
-  is_active?: boolean = false;
+  // @ApiProperty({ default: false })
+  // @IsOptional()
+  // @IsBoolean()
+  // is_active?: boolean = false;
 }

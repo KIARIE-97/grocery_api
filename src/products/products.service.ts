@@ -1,20 +1,22 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, Req, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { Order } from 'src/orders/entities/order.entity';
+import { Repository } from 'typeorm';
 import { Store } from 'src/stores/entities/store.entity';
 import { Role, User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Order)
-    private readonly OrderRepository: Repository<Order>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(Product)

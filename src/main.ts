@@ -7,12 +7,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // app.enableCors({
-  //   origin: (*), // allow all origins
-  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  //   allowedHeaders: 'Content-Type, Accept, Authorization',
-  //   credentials: true,
-  // });
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true,
+  });
   app.useGlobalPipes(new ValidationPipe());
   const config = new DocumentBuilder()
     .setTitle('Grocery Delivery API')
@@ -81,7 +81,7 @@ This API uses **JWT Bearer tokens** for secure authentication.
     .addTag('Stores', 'Grocery store and product management')
     .addTag('Orders', 'Order placement and tracking endpoints')
     .addTag('Drivers', 'Driver-specific endpoints')
-    .addTag('Admin', 'Platform administration endpoints')
+    .addTag('Products', 'Product management endpoints')
     .addBearerAuth(
       {
         type: 'http',
@@ -89,8 +89,7 @@ This API uses **JWT Bearer tokens** for secure authentication.
         bearerFormat: 'JWT',
         name: 'Authorization',
         in: 'header',
-      },
-      'access-token', // This name is used to refer to the security scheme
+      }, // This name is used to refer to the security scheme
     )
     .build();
 

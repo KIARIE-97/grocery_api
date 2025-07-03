@@ -11,6 +11,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { AtStrategy } from './strategies/at.strategy';
 import { RtStrategy } from './strategies/rt.strategy';
+import { AppMailerService } from 'src/mailer/mailer.service';
 
 
 @Module({
@@ -21,6 +22,9 @@ import { RtStrategy } from './strategies/rt.strategy';
     PassportModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AtStrategy, RtStrategy],
+  providers: [AuthService, AtStrategy, RtStrategy,
+     AppMailerService,
+
+  ],
 })
 export class AuthModule {}
