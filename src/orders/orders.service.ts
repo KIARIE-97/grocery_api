@@ -4,9 +4,10 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from 'src/users/entities/user.entity';
 import { Driver } from 'src/drivers/entities/driver.entity';
-import { Repository } from 'typeorm';
-import { Order, OStatus } from './entities/order.entity';
+import { In, Repository } from 'typeorm';
+import { Order, OStatus, paymentStatus } from './entities/order.entity';
 import { Store } from 'src/stores/entities/store.entity';
+import { Product } from 'src/products/entities/product.entity';
 
 @Injectable()
 export class OrdersService {
@@ -19,6 +20,8 @@ export class OrdersService {
     private readonly OrderRepository: Repository<Order>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) {}
   //   async create(createOrderDto: CreateOrderDto): Promise<Order> {
   //     // Step 1: Validate Customer
@@ -95,23 +98,34 @@ export class OrdersService {
       throw new NotFoundException('Invalid customer');
     }
 
+    // 1. Validate product IDs
+    const products = await this.validateProducts(createOrderDto.product_ids);
+
     const deliveryDate = new Date(createOrderDto.delivery_schedule_at);
     const deliveryDateString = deliveryDate.toISOString().split('T')[0];
-        if (isNaN(deliveryDate.getTime())) {
-          throw new BadRequestException('Invalid delivery schedule date');
-        }
-
+    if (isNaN(deliveryDate.getTime())) {
+      throw new BadRequestException('Invalid delivery schedule date');
+    }
+    // 2.create the order
     const newOrder = this.OrderRepository.create({
       total_amount: createOrderDto.total_amount,
       tax_amount: createOrderDto.tax_amount,
-      status: OStatus.PENDING,
+      status: OStatus.ACCEPTED,
       payment_method: createOrderDto.payment_method,
       payment_status: createOrderDto.payment_status,
       delivery_schedule_at: deliveryDateString,
       customer,
+      products,
     });
 
-    return await this.OrderRepository.save(newOrder);
+    const order = await this.OrderRepository.save(newOrder);
+
+    if (order.payment_status === paymentStatus.COMPLETED) {
+      await this.decrementStock(createOrderDto.product_ids);
+    }
+
+    return order;
+
   }
 
   async assignStore(orderId: number, storeId: number): Promise<Order> {
@@ -126,7 +140,7 @@ export class OrdersService {
     if (!store) throw new NotFoundException('Store not found');
 
     order.store = store;
-    order.status = OStatus.READY_FOR_PICKUP; 
+    order.status = OStatus.PREPARING;
     return await this.OrderRepository.save(order);
   }
 
@@ -145,8 +159,8 @@ export class OrdersService {
       throw new NotFoundException('Driver not found or is not a driver');
     }
 
-    order.driver = driver.id, {...driver};
-    order.status = OStatus.OUT_FOR_DELIVERY; 
+    ((order.driver = driver.id), { ...driver });
+    order.status = OStatus.OUT_FOR_DELIVERY;
     return await this.OrderRepository.save(order);
   }
   async findAll() {
@@ -201,7 +215,7 @@ export class OrdersService {
     // Customer can cancel own order only (before 24 hrs)
     if (isCustomer) {
       const isOwner = order.customer.id === currentUser.id;
-      const cancelDeadline = new Date(order.delivery_schedule_at); 
+      const cancelDeadline = new Date(order.delivery_schedule_at);
       cancelDeadline.setHours(cancelDeadline.getHours() - 24);
       const now = new Date();
 
@@ -251,5 +265,55 @@ export class OrdersService {
     query.leftJoinAndSelect('order.driver', 'driver');
 
     return await query.getMany();
+  }
+  async validateProducts(productIds: number[]): Promise<Product[]> {
+    // Fetch all matching products from DB- the join table order_items
+    const products = await this.productRepository.findBy({
+      id: In(productIds),
+    });
+
+    // Ensure all products exist
+    if (products.length !== productIds.length) {
+      const foundIds = products.map((p) => p.id);
+      const missingIds = productIds.filter((id) => !foundIds.includes(id));
+      throw new NotFoundException(`Missing products: ${missingIds.join(', ')}`);
+    }
+
+    // Ensure all products are available
+    const unavailable = products.filter(
+      (p) => !p.is_available || (p.stock !== undefined && p.stock <= 0),
+    );
+
+    if (unavailable.length > 0) {
+      const names = unavailable.map((p) => p.product_name || `ID: ${p.id}`);
+      throw new BadRequestException(
+        `Unavailable products: ${names.join(', ')}`,
+      );
+    }
+
+    return products;
+  }
+  async decrementStock(
+    orderItems: { id: number; quantity: number }[],
+  ): Promise<void> {
+    for (const item of orderItems) {
+      const product = await this.productRepository.findOne({
+        where: { id: item.id },
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${item.id} not found`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product ID ${item.id}`,
+        );
+      }
+
+      product.stock -= item.quantity;
+
+      await this.productRepository.save(product); // Persist the updated stock
+    }
   }
 }

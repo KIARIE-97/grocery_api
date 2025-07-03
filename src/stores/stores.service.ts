@@ -29,7 +29,7 @@ export class StoresService {
       store_name: createStoreDto.store_name,
       location: createStoreDto.location,
       is_verified: createStoreDto.is_verified,
-      user: existingUser.id,
+      user: existingUser,
     });
     const savedStore = await this.storeRepository.save(newStore);
     return savedStore;
@@ -37,7 +37,7 @@ export class StoresService {
 
   async findAll() {
     return await this.storeRepository.find({
-      relations: ['user'],
+      relations: ['user', 'product'],
     });
   }
 
@@ -69,7 +69,7 @@ export class StoresService {
     }
     const isStoreOwner = current_user.role === Role.STORE_OWNER;
 
-    if(isStoreOwner &&  store.user !== current_user.id) {
+    if(isStoreOwner &&  store.user.id !== current_user.id) {
       throw new ForbiddenException(`You are not authorized to delete this store`);
     }
 

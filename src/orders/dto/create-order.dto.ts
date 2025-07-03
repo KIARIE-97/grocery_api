@@ -75,4 +75,12 @@ export class CreateOrderDto {
   })
   @IsNumber()
   customer_id: number;
+
+  @ApiProperty({
+    description: 'The product ids',
+    example: '1',
+    required: true,
+  })
+  @IsNumber()
+  product_ids: [];
 }

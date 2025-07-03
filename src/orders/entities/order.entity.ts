@@ -1,7 +1,8 @@
 import { Driver } from "src/drivers/entities/driver.entity";
+import { Product } from "src/products/entities/product.entity";
 import { Store } from "src/stores/entities/store.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
 
 export enum OStatus {
   PENDING = 'pending',
@@ -83,5 +84,6 @@ export class Order {
   })
   customer: User;
 
-//   product_ids: number[]; // Assuming this is an array of product IDs
-}
+  @ManyToMany(() => Product, (product) => product.orders)
+  products: Relation<Product[]>
+  }

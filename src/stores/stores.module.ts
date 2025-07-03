@@ -5,11 +5,12 @@ import { DatabaseModule } from 'src/database/database.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Store } from './entities/store.entity';
+import { Product } from 'src/products/entities/product.entity';
 
 @Module({
   imports: [
     DatabaseModule, TypeOrmModule.forFeature([
-      User, Store
+      User, Store, Product
     ])
   ],
   controllers: [StoresController],

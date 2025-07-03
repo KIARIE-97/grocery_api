@@ -9,9 +9,10 @@ import { Store } from 'src/stores/entities/store.entity';
 import { Driver } from 'src/drivers/entities/driver.entity';
 
 @Module({
-  imports: [DatabaseModule,TypeOrmModule.forFeature([Order, User, Store,
-    Driver
-  ])], // Add your Order entity here
+  imports: [
+    DatabaseModule,
+    TypeOrmModule.forFeature([Order, User, Store, Driver]),
+  ], // Add your Order entity here
   controllers: [OrdersController],
   providers: [OrdersService],
 })

@@ -1,4 +1,5 @@
 import { Order } from "src/orders/entities/order.entity";
+import { Product } from "src/products/entities/product.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -40,11 +41,17 @@ export class Store {
     cascade: true,
     onDelete: 'CASCADE',
   })
-    user: User['id'];
+    user: User;
 
   @OneToMany(() => Order, (order) => order.store, {
       cascade: ['insert', 'update'], // this allows the order to be created/updated/deleted with the store
       nullable: true,
     })
-    orders: Store[];  
+    orders: Store[]; 
+     
+   @OneToMany(() => Product, (product) => product.store, {
+    cascade: ['insert', 'update'], // this allows the product to be created/updated/deleted with the store
+    nullable: true,
+   })
+    products: Product[];
 }
