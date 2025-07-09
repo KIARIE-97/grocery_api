@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Strategy, ExtractJwt, StrategyOptionsWithRequest } from 'passport-jwt';
 import { Request } from 'express';
@@ -28,11 +28,11 @@ export class RtStrategy extends PassportStrategy(Strategy, 'jwt-rt') {
     const authHeader = req.get('Authorization');
     console.log('RtStrategy validate() called');
     if (!authHeader) {
-      throw new Error('No refresh token provided');
+      throw new UnauthorizedException('No refresh token provided');
     }
     const refreshToken = authHeader.replace('Bearer ', '').trim();
     if (!refreshToken) {
-      throw new Error('Invalid refresh token format');
+      throw new UnauthorizedException('Invalid refresh token format');
     }
     return {
       ...payload, // attach request.user = payload;

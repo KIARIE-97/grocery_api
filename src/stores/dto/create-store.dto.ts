@@ -26,10 +26,42 @@ export class CreateStoreDto {
     is_verified: boolean;
 
     @ApiProperty({
+      description: 'Opening time of the store (HH:mm:ss)',
+      example: '08:00:00',
+      required: false,
+    })
+    @IsString()
+    opening_time?: string;
+
+    @ApiProperty({
+      description: 'Closing time of the store (HH:mm:ss)',
+      example: '20:00:00',
+      required: false,
+    })
+    @IsString()
+    closing_time?: string;
+
+    @ApiProperty({
+      description: 'Description of the store',
+      example: 'A one-stop shop for all your grocery needs.',
+      required: false,
+    })
+    @IsString()
+    description?: string;
+
+    @ApiProperty({
+      description: 'URL or path to the shop image',
+      example: 'https://example.com/image.jpg',
+      required: false,
+    })
+    @IsString()
+    shop_image?: string;
+
+    @ApiProperty({
     description: 'The ID of the user who owns the store',
     example: 1,
     required: true,
     })
     @IsNumber()
-    user_id: number;
+    user: number;
 }

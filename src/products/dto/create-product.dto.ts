@@ -2,13 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateProductDto {
-  @ApiProperty({
-    description: 'The ID of the store to which the product belongs',
-    example: 1,
-    required: true,
-  })
-  @IsNumber()
-  store: number;
+  // @ApiProperty({
+  //   description: 'The ID of the store to which the product belongs',
+  //   example: 1,
+  //   required: true,
+  // })
+  // @IsNumber()
+  // store: number;
 
   @ApiProperty({
     description: 'The name of the product',
@@ -56,6 +56,7 @@ export class CreateProductDto {
     required: false,
   })
   @IsString()
+  @IsOptional()
   size: string;
 
   @ApiProperty({
@@ -71,12 +72,12 @@ export class CreateProductDto {
     example: 'https://example.com/image.jpg',
     required: true,
   })
-  image_url: string;
+  product_image: string;
 
   @ApiProperty({
     description: 'The category ids',
     example: '1',
-    })
+  })
   @IsNumber()
-  category_ids: [];
+  categories: number[];
 }

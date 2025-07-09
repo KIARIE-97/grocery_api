@@ -12,6 +12,7 @@ export enum SStatus{
 export class Store {
   @PrimaryGeneratedColumn('increment')
   id: number;
+  
   @Column()
   store_name: string;
 
@@ -20,6 +21,18 @@ export class Store {
 
   @Column()
   is_verified: boolean;
+
+  @Column({ type: 'time', nullable: true })
+  opening_time: string;
+
+  @Column({ type: 'time', nullable: true })
+  closing_time: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
+  shop_image: string;
 
   @Column({type: 'enum', enum: SStatus, default: SStatus.ACTIVE})
   status: SStatus;
@@ -37,6 +50,8 @@ export class Store {
   })
   updated_at: Date;
 
+
+
   @ManyToOne(() => User, (user) => user.id, {
     cascade: true,
     onDelete: 'CASCADE',
@@ -47,7 +62,7 @@ export class Store {
       cascade: ['insert', 'update'], // this allows the order to be created/updated/deleted with the store
       nullable: true,
     })
-    orders: Store[]; 
+    orders: Order[]; 
      
    @OneToMany(() => Product, (product) => product.store, {
     cascade: ['insert', 'update'], // this allows the product to be created/updated/deleted with the store

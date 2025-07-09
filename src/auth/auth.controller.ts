@@ -20,7 +20,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   //signin user
-  @Public() // This endpoint is accessible without authentication
+  @Public() 
   @ApiOperation({
     summary: 'User login',
     description: 'Authenticates a user and returns access and refresh tokens',
@@ -86,7 +86,7 @@ export class AuthController {
   }
 
   //signup user
-  @Public() // This endpoint is accessible without authentication
+  @Public() 
   @Post('signup')
   create(@Body() createUserDto: CreateUserDto) {
     return this.authService.SignUp(createUserDto);

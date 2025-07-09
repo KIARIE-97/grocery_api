@@ -4,6 +4,8 @@ import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Role } from 'src/users/entities/user.entity';
+import { Roles } from 'src/auth/decorators/role.decorator';
 
 @UseGuards(RolesGuard)
 @ApiBearerAuth('access-token')
@@ -11,7 +13,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 @Controller('stores')
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
-
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Post()
   @ApiOperation({
     summary: 'Create a new store',
@@ -22,6 +24,7 @@ export class StoresController {
     return this.storesService.create(createStoreDto);
   }
 
+  @Roles(Role.ADMIN)
   @Get()
   @ApiOperation({
     summary: 'Get all stores',
@@ -34,6 +37,7 @@ export class StoresController {
     return this.storesService.findAll();
   }
 
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a store by ID',
@@ -48,6 +52,7 @@ export class StoresController {
     return this.storesService.findOne(+id);
   }
 
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update a store',
@@ -62,6 +67,7 @@ export class StoresController {
     return this.storesService.update(+id, updateStoreDto);
   }
 
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete a store',

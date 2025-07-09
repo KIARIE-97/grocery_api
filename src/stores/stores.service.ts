@@ -16,19 +16,19 @@ export class StoresService {
   ) {}
   async create(createStoreDto: CreateStoreDto) {
     const existingUser = await this.userRepository.findOneBy({
-      id: createStoreDto.user_id,
-      role: Role.STORE_OWNER,
+      id: createStoreDto.user,
+      // role: Role.STORE_OWNER,
     });
 
     if (!existingUser) {
       throw new NotFoundException(
-        `user with id ${createStoreDto.user_id} not found or is not a store owner😬`,
+        `user with id ${createStoreDto.user} not found or is not a store owner😬`,
       );
     }
     const newStore = this.storeRepository.create({
       store_name: createStoreDto.store_name,
       location: createStoreDto.location,
-      is_verified: createStoreDto.is_verified,
+      is_verified: false,
       user: existingUser,
     });
     const savedStore = await this.storeRepository.save(newStore);
@@ -37,7 +37,7 @@ export class StoresService {
 
   async findAll() {
     return await this.storeRepository.find({
-      relations: ['user', 'product'],
+      relations: ['user'],
     });
   }
 
@@ -57,7 +57,11 @@ export class StoresService {
   }
 
   async update(id: number, updateStoreDto: UpdateStoreDto) {
-    await this.storeRepository.update(id, updateStoreDto);
+    const updateData = { ...updateStoreDto } as any;
+    if (updateStoreDto.user !== undefined) {
+      updateData.user = { id: updateStoreDto.user };
+    }
+    await this.storeRepository.update(id, updateData);
     return await this.findOne(id);
   }
 

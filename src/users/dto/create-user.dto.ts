@@ -48,11 +48,12 @@ export class CreateUserDto {
   @IsString()
   phone_number: string;
 
-  // @ApiProperty()
-  // @IsEnum(Role, {
-  //   message: 'Role must be one of the following: CUSTOMER, ADMIN, DRIVER, STORE_OWNER',
-  // })
-  // role: Role = Role.CUSTOMER;
+  @ApiProperty()
+  @IsEnum(Role, {
+    message: 'Role must be one of the following: CUSTOMER, ADMIN, DRIVER, STORE_OWNER',
+  })
+  @IsOptional()
+  role: Role = Role.CUSTOMER;
 
 
   @IsOptional()

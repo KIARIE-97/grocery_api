@@ -1,15 +1,20 @@
-import { Category } from "src/category/entities/category.entity";
-import { Order } from "src/orders/entities/order.entity";
-import { Store } from "src/stores/entities/store.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
+import { Category } from 'src/category/entities/category.entity';
+import { Order } from 'src/orders/entities/order.entity';
+import { Store } from 'src/stores/entities/store.entity';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
+} from 'typeorm';
 
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn('increment')
   id: number;
-
-  @Column()
-  store_id: number;
 
   @Column()
   product_name: string;
@@ -20,23 +25,23 @@ export class Product {
   @Column()
   product_price: number;
 
-  @Column()
+  @Column({ nullable: true })
   product_image: string;
 
-  @Column()
+  @Column({ nullable: true })
   quatity: number;
 
-  @Column()
+  @Column({ nullable: true })
   stock: number;
 
   @Column({ nullable: true })
   size: string;
 
-  @Column()
-  is_available: boolean;
+  @Column({ nullable: true })
+  public_id: string;
 
   @Column()
-  image_url: string;
+  is_available: boolean;
 
   @Column({
     type: 'timestamp',
@@ -44,7 +49,7 @@ export class Product {
   })
   created_at: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
   @Column({
@@ -67,6 +72,5 @@ export class Product {
   orders: Relation<Order[]>;
 
   @ManyToMany(() => Category, (category) => category.products)
-  categorys: Relation<Category[]>;
-
+  categories: Relation<Category[]>;
 }

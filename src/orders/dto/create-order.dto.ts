@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, isEnum, IsEnum, IsNumber, IsOptional } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsDateString, isEnum, IsEnum, IsNumber, IsOptional } from "class-validator";
 import { OStatus, paymentMethod, paymentStatus } from "../entities/order.entity";
 
 export class CreateOrderDto {
@@ -81,6 +81,8 @@ export class CreateOrderDto {
     example: '1',
     required: true,
   })
-  @IsNumber()
-  product_ids: [];
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  product_ids: number[];
 }

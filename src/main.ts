@@ -21,7 +21,7 @@ async function bootstrap() {
 # 🛒 On-Demand Grocery Delivery API
 
 A robust and scalable REST API for a modern grocery delivery platform. It's designed to connect customers with local stores for a seamless shopping and delivery experience, all managed through a comprehensive role-based system.
-
+it has 2-factor authentication, role-based access control, and a user-friendly interface for customers, store owners, drivers, and administrators.
 ---
 
 ## 🌟 Features Overview
@@ -82,6 +82,7 @@ This API uses **JWT Bearer tokens** for secure authentication.
     .addTag('Orders', 'Order placement and tracking endpoints')
     .addTag('Drivers', 'Driver-specific endpoints')
     .addTag('Products', 'Product management endpoints')
+    .addTag('Categories', 'Product category management')
     .addBearerAuth(
       {
         type: 'http',
@@ -89,7 +90,7 @@ This API uses **JWT Bearer tokens** for secure authentication.
         bearerFormat: 'JWT',
         name: 'Authorization',
         in: 'header',
-      }, // This name is used to refer to the security scheme
+      },'access-token', 
     )
     .build();
 

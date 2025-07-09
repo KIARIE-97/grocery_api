@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { Role, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as Bcrypt from 'bcrypt';
 
@@ -48,19 +48,41 @@ export class UsersService {
 
     // return users.map((user) => this.excludePassword(user));
   }
+  async findAllCustomers(): Promise<Partial<User>[]> {
+    const customers = await this.userRepository.find({
+      where: { role: Role.CUSTOMER},
+      relations: ['stores', 'orders', 'driver'],
+    });
+    return customers.map((customer) => this.excludePassword(customer));
+  }
+  async findAllStoreOwners(): Promise<Partial<User>[]> {
+    const storeOwners = await this.userRepository.find({
+      where: { role: Role.STORE_OWNER },
+      relations: ['stores', 'orders', 'driver'],
+    });
+    return storeOwners.map((storeOwner) => this.excludePassword(storeOwner));
+  }
+  async findAllDrivers(): Promise<Partial<User>[]> {
+    const drivers = await this.userRepository.find({
+      where: { role: Role.DRIVER },
+      relations: ['stores', 'orders', 'driver'],
+    });
+    return drivers.map((driver) => this.excludePassword(driver));
+  }
+
 
   async findOne(id: number): Promise<User | string> {
     return await this.userRepository
       .findOneBy({ id })
-      .then((profile) => {
-        if (!profile) {
-          return `No profile found with id ${id}`;
+      .then((user) => {
+        if (!user) {
+          return `No user found with id ${id}`;
         }
-        return profile;
+        return user;
       })
       .catch((error) => {
-        console.error('Error finding profile:', error);
-        throw new Error(`Failed to find profile with id ${id}`);
+        console.error('Error finding user:', error);
+        throw new Error(`Failed to find user with id ${id}`);
       });
   }
 
@@ -107,6 +129,7 @@ export class UsersService {
     if (requestedId !== authenticatedUserId) {
       throw new Error('You are not authorized to access this profile');
     }
+    console.log(`Fetching profile for requestedId: ${requestedId}, authenticatedUserId: ${authenticatedUserId}`);
     return await this.userRepository
       .findOneBy({ id: requestedId })
       .then((profile) => {

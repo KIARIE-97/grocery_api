@@ -1,8 +1,9 @@
+import { nanoid } from "nanoid";
 import { Driver } from "src/drivers/entities/driver.entity";
 import { Product } from "src/products/entities/product.entity";
 import { Store } from "src/stores/entities/store.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
+import { BeforeInsert, Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
 
 export enum OStatus {
   PENDING = 'pending',
@@ -32,8 +33,18 @@ export class Order {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column()
+  @Column({nullable: true})
+  order_id: string;
+
+  @Column({unique: true})
   total_amount: number;
+
+  @BeforeInsert()
+  generatedOrderId() {
+    const prefix = 'ORD';
+    const uniqueCode = nanoid(6).toUpperCase();
+    this.order_id = `${prefix}${uniqueCode}`;
+  }
 
   @Column()
   tax_amount: number;

@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Search, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Search, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/role.decorator';
+import { Role } from 'src/users/entities/user.entity';
 
+@UseGuards(RolesGuard)
 @Controller('drivers')
 @ApiBearerAuth('access-token')
 @ApiTags('Drivers')
@@ -11,6 +15,7 @@ import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiTags, ApiUnautho
 export class DriversController {
   constructor(private readonly driversService: DriversService) {}
 
+  @Roles(Role.ADMIN)
   @Post()
   @ApiOperation({
     summary: 'Create a new driver',
@@ -20,7 +25,8 @@ export class DriversController {
   create(@Body() createDriverDto: CreateDriverDto) {
     return this.driversService.create(createDriverDto);
   }
-
+  
+  @Roles(Role.ADMIN)
   @Get()
   @ApiOperation({
     summary: 'Get all drivers',
@@ -31,6 +37,7 @@ export class DriversController {
     return this.driversService.findAll();
   }
 
+  @Roles(Role.ADMIN, Role.DRIVER)
   @Get('query')
   @ApiOperation({
     summary: 'Search drivers by query',
@@ -43,7 +50,8 @@ export class DriversController {
     }
     return this.driversService.findAll();
   }
-
+ 
+  @Roles(Role.ADMIN)
   @Get(':id')
   @ApiOperation({
     summary: 'Get driver by ID',
@@ -53,7 +61,8 @@ export class DriversController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.driversService.findOne(id);
   }
-
+ 
+  @Roles(Role.ADMIN, Role.DRIVER)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update driver details',
@@ -67,6 +76,7 @@ export class DriversController {
     return this.driversService.update(id, updateDriverDto);
   }
 
+  @Roles(Role.ADMIN, Role.DRIVER)
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete a driver',

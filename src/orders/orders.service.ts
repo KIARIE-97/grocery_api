@@ -99,6 +99,9 @@ export class OrdersService {
     }
 
     // 1. Validate product IDs
+    if (!Array.isArray(createOrderDto.product_ids)) {
+      throw new BadRequestException('product_ids must be an array');
+    }
     const products = await this.validateProducts(createOrderDto.product_ids);
 
     const deliveryDate = new Date(createOrderDto.delivery_schedule_at);
@@ -121,7 +124,9 @@ export class OrdersService {
     const order = await this.OrderRepository.save(newOrder);
 
     if (order.payment_status === paymentStatus.COMPLETED) {
-      await this.decrementStock(createOrderDto.product_ids);
+      await this.decrementStock(
+        createOrderDto.product_ids.map((id: number) => ({ id, quantity: 1 }))
+      );
     }
 
     return order;
@@ -164,7 +169,9 @@ export class OrdersService {
     return await this.OrderRepository.save(order);
   }
   async findAll() {
-    return this.OrderRepository.find();
+    return this.OrderRepository.find({
+      relations: ['products', 'customer', 'store', 'driver'],
+    });
   }
 
   async findOne(id: number) {

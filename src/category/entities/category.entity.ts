@@ -9,8 +9,15 @@ export class Category {
     @Column({type: 'text'})
     category_name: string
 
-    @ManyToMany(() => Product, (product) => product.categorys, {
-        cascade: true
+    @Column({nullable: true})
+    description: string;
+
+    @Column({nullable: true})
+    image: string;
+
+    @ManyToMany(() => Product, (product) => product.categories, {
+        cascade: true,
+        nullable: true
     })
     @JoinTable({name: 'item_category'})
     products: Relation<Product[]>;

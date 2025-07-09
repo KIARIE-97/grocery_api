@@ -13,27 +13,53 @@ export class CategoryService {
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
-    const newCategory = await this.categoryRepository.create({
+    const newCategory = this.categoryRepository.create({
       category_name: createCategoryDto.category_name,
     });
-    return newCategory;
+
+    const savedCategory = await this.categoryRepository.save(newCategory);
+    return savedCategory;
   }
 
- async findAll() {
-    return await this.categoryRepository.find();
-  }
-
-  async  findOne(id: number) {
+  async findAll() {
     return await this.categoryRepository.find({
-      relations: ['product'],
-    });  }
+      relations: ['products'],
+    });
+  }
+
+  async findOne(id: number) {
+    return await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+  }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-     await this.categoryRepository.update(id, updateCategoryDto);
-     return await this.findOne(id)
+    const { products, ...rest } = updateCategoryDto;
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+
+    if (!category) throw new Error('Category not found');
+
+    Object.assign(category, rest);
+
+    if (products && Array.isArray(products)) {
+      // You need to fetch product entities by their ids
+      category.products = products.map((productId: number) => ({
+        id: productId,
+      })) as any;
+    }
+
+    await this.categoryRepository.save(category);
+    return await this.findOne(id);
   }
 
   async remove(id: number) {
-    await this.categoryRepository.delete(id) 
-    return { message: `category with id ${id} has been deleted 🧹🧹 successfully` };  }
+    await this.categoryRepository.delete(id);
+    return {
+      message: `category with id ${id} has been deleted 🧹🧹 successfully`,
+    };
+  }
 }

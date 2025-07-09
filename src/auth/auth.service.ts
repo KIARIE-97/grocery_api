@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
-import { User } from 'src/users/entities/user.entity';
+import { Role, User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Driver } from 'src/drivers/entities/driver.entity';
@@ -82,7 +82,7 @@ export class AuthService {
   async signIn(createAuthDto: CreateAuthDto) {
     const founduser = await this.userRepository.findOne({
       where: { email: createAuthDto.email },
-      select: ['id', 'email', 'password', 'role', 'otp'],
+      select: ['id', 'email', 'password', 'role', 'otp', 'full_name'],
     });
     if (!founduser) {
       throw new Error(`User with email ${createAuthDto.email} not found`);
@@ -102,20 +102,6 @@ export class AuthService {
       throw new NotFoundException('Invalid OTP');
     }
 
-    // after password is validated and before generating tokens:
-    // if (founduser.status === UStatus.PENDING) {
-    //   founduser.status = UStatus.ACTIVE;
-    //   await this.userRepository.save(founduser);
-    // }
-    // if (
-    //   founduser.status === UStatus.BLOCKED ||
-    //   founduser.status === UStatus.DEACTIVATED
-    // ) {
-    //   throw new UnauthorizedException(
-    //     'Your account is not active. Contact admin.',
-    //   );
-    // }
-
     // if the user is found and the password matches
     const { accessToken, refreshToken } = await this.getTokens(
       founduser.id,
@@ -134,6 +120,7 @@ export class AuthService {
   async signOut(user_id: number) {
     const result = await this.userRepository.update(user_id, {
       hashedRefreshToken: null,
+      is_active: false
     });
 
     if (result.affected === 0) {
@@ -175,6 +162,7 @@ export class AuthService {
   }
   //signup user
   async SignUp(createUserDto: CreateUserDto) {
+    console.log("first")
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -200,6 +188,7 @@ export class AuthService {
       email: createUserDto.email,
       phone_number: createUserDto.phone_number,
       password: hashedPassword,
+      role: createUserDto.role || Role.CUSTOMER, // Default to CUSTOMER if not provided
       otp: otp,
     });
     // generate tokens
@@ -226,6 +215,7 @@ export class AuthService {
     } catch (err) {
       console.error('Error sending welcome email:', err);
     }
+    console.log(`updated user`, updatedUser);
     return { user: updatedUser };
   }
 }

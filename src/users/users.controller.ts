@@ -4,13 +4,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Role } from './entities/user.entity';
+import { Role, User } from './entities/user.entity';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AnyARecord } from 'dns';
 
 interface AuthenticatedRequest extends Request {
-  user: any; // or specify the user type if you have one
+  user: any; 
 }
 
 @UseGuards(RolesGuard)
@@ -46,14 +47,50 @@ export class UsersController {
   findAll() {
     return this.usersService.findAll();
   }
+  @Roles(Role.ADMIN, Role.CUSTOMER)
+  @Get('customers')
+  @ApiOperation({
+    summary: 'Get all customers',
+    description: 'Retrieves a list of all customers.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  findAllCustomers() {
+    return this.usersService.findAllCustomers();
+  }
 
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
+  @Get('store-owners')
+  @ApiOperation({
+    summary: 'Get all store owners',
+    description: 'Retrieves a list of all store owners.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  findAllStoreOwners() {
+    return this.usersService.findAllStoreOwners();
+  }
+
+  @Roles(Role.ADMIN, Role.DRIVER)
+  @Get('drivers')
+  @ApiOperation({
+    summary: 'Get all drivers',
+    description: 'Retrieves a list of all drivers.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  findAllDrivers() {
+    return this.usersService.findAllDrivers();
+  }
+
+  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
   @Get('profile')
   async getMyProfile(@Req() req: AuthenticatedRequest) {
-    const userId = req.user.id;
+    const userId = req.user.sub;
     return this.usersService.myProfile(userId, userId);
   }
 
-  @Roles(Role.ADMIN, Role.SUB_ADMIN)
+  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
   @Get(':id')
   @ApiOperation({
     summary: 'Get user by ID',
@@ -65,6 +102,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update user details',
@@ -80,7 +118,7 @@ export class UsersController {
   }
 
   @Roles(Role.ADMIN, Role.CUSTOMER)
-  @Public()
+  // @Public()
   @Patch(':id/reset-password')
   @ApiOperation({
     summary: 'Reset user password',
@@ -94,7 +132,8 @@ export class UsersController {
     return this.usersService.resetPassword(id, dto.newPassword);
   }
 
-  @Public()
+  // @Public()
+  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete a user',

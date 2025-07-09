@@ -41,7 +41,7 @@ export class AppMailerService {
     await this.mailerService.sendMail({
       to,
       subject: 'Welcome!',
-      template: 'welcome', // path to template file
+      template: 'welcome', 
       context: { username, accessToken, otp },
     });
     console.log(`Welcome email sent to ${to}`);
