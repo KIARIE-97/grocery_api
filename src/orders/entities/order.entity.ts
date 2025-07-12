@@ -1,9 +1,10 @@
 import { nanoid } from "nanoid";
 import { Driver } from "src/drivers/entities/driver.entity";
+import { Payment, PaymentStatus } from "src/payment/entities/payment.entity";
 import { Product } from "src/products/entities/product.entity";
 import { Store } from "src/stores/entities/store.entity";
 import { User } from "src/users/entities/user.entity";
-import { BeforeInsert, Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
 
 export enum OStatus {
   PENDING = 'pending',
@@ -15,12 +16,8 @@ export enum OStatus {
   CANCELLED= 'cancelled',
   FAILED= 'failed'
 }
-export enum paymentStatus {
-  PENDING= 'pending',
-  COMPLETED= 'completed',
-  FAILED= 'failed',
-  REFUNDED= 'refunded',
-}
+
+
 export enum paymentMethod {
   CREDIT_CARD = 'credit_card',
   DEBIT_CARD = 'debit_card',
@@ -33,10 +30,10 @@ export class Order {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   order_id: string;
 
-  @Column({unique: true})
+  @Column({ unique: true })
   total_amount: number;
 
   @BeforeInsert()
@@ -55,8 +52,8 @@ export class Order {
   @Column({ type: 'enum', enum: paymentMethod, default: paymentMethod.COD })
   payment_method: paymentMethod;
 
-  @Column({ type: 'enum', enum: paymentStatus, default: paymentStatus.PENDING })
-  payment_status: paymentStatus;
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  payment_status: PaymentStatus;
 
   @Column('date')
   delivery_schedule_at: string;
@@ -96,5 +93,13 @@ export class Order {
   customer: User;
 
   @ManyToMany(() => Product, (product) => product.orders)
-  products: Relation<Product[]>
-  }
+  products: Relation<Product[]>;
+
+  @OneToOne(() => Payment, (payment) => payment.order, {
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  payment?: Relation<Payment>;
+}

@@ -10,7 +10,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AnyARecord } from 'dns';
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user: any; 
 }
 
@@ -88,6 +88,18 @@ export class UsersController {
   async getMyProfile(@Req() req: AuthenticatedRequest) {
     const userId = req.user.sub;
     return this.usersService.myProfile(userId, userId);
+  }
+
+  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
+  @Get('customers/:id')
+  @ApiOperation({
+    summary: 'Get customer by ID',
+    description: 'Retrieves a customer by their unique ID.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required' })
+  @ApiBadRequestResponse({ description: 'Invalid user ID' })
+  findOneCustomer(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOneCustomer(id);
   }
 
   @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)

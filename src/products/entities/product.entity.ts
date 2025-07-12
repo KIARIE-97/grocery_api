@@ -29,7 +29,7 @@ export class Product {
   product_image: string;
 
   @Column({ nullable: true })
-  quatity: number;
+  quantity: number;
 
   @Column({ nullable: true })
   stock: number;

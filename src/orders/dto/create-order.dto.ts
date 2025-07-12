@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ArrayNotEmpty, IsArray, IsDateString, isEnum, IsEnum, IsNumber, IsOptional } from "class-validator";
-import { OStatus, paymentMethod, paymentStatus } from "../entities/order.entity";
+import { OStatus, paymentMethod } from "../entities/order.entity";
+import { PaymentStatus } from "src/payment/entities/payment.entity";
 
 export class CreateOrderDto {
   @ApiProperty({
@@ -39,8 +40,8 @@ export class CreateOrderDto {
     description: 'The status of the payment',
     example: 'pending',
   })
-  @IsEnum(paymentStatus, { message: 'payment_status' })
-  payment_status: paymentStatus = paymentStatus.PENDING;
+  @IsEnum(PaymentStatus, { message: 'payment_status' })
+  payment_status: PaymentStatus = PaymentStatus.PENDING;
 
   @ApiProperty({
     description: 'The tax on the current order',

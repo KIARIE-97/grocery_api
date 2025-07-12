@@ -55,6 +55,24 @@ export class UsersService {
     });
     return customers.map((customer) => this.excludePassword(customer));
   }
+  //find one customer
+  async findOneCustomer(id: number): Promise<Partial<User> | string> {
+    const customer = await this.userRepository.findOne({
+      where: { id, role: Role.CUSTOMER },
+      relations: ['stores', 'orders', 'driver'],
+    });
+    if (!customer) {
+      return `No customer found with id ${id}`;
+    }
+    return this.excludePassword(customer);
+  }
+  async findAllAdmins(): Promise<Partial<User>[]> {
+    const admins = await this.userRepository.find({
+      where: { role: Role.ADMIN },
+      relations: ['stores', 'orders', 'driver'],
+    });
+    return admins.map((admin) => this.excludePassword(admin));
+  }
   async findAllStoreOwners(): Promise<Partial<User>[]> {
     const storeOwners = await this.userRepository.find({
       where: { role: Role.STORE_OWNER },

@@ -5,9 +5,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from 'src/users/entities/user.entity';
 import { Driver } from 'src/drivers/entities/driver.entity';
 import { In, Repository } from 'typeorm';
-import { Order, OStatus, paymentStatus } from './entities/order.entity';
+import { Order, OStatus } from './entities/order.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { PaymentStatus } from 'src/payment/entities/payment.entity';
 
 @Injectable()
 export class OrdersService {
@@ -123,7 +124,7 @@ export class OrdersService {
 
     const order = await this.OrderRepository.save(newOrder);
 
-    if (order.payment_status === paymentStatus.COMPLETED) {
+    if (order.payment_status === PaymentStatus.SUCCESS) {
       await this.decrementStock(
         createOrderDto.product_ids.map((id: number) => ({ id, quantity: 1 }))
       );

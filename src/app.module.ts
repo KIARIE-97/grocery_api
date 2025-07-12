@@ -17,6 +17,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { PaymentModule } from './payment/payment.module';
 
 
 @Module({
@@ -69,6 +70,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     CategoryModule,
     MailerModule,
     CloudinaryModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

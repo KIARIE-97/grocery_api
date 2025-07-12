@@ -1,5 +1,6 @@
 import { Driver } from 'src/drivers/entities/driver.entity';
 import { Order } from 'src/orders/entities/order.entity';
+import { Payment } from 'src/payment/entities/payment.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import {
     Column,
@@ -85,4 +86,10 @@ export class User {
     nullable: true,
   })
   orders: Order[];
+
+  @OneToMany(() => Payment, (payment) => payment.user, {
+    cascade: ['insert', 'update'], // this allows the Payment to be created/updated with the user
+    nullable: true,
+  })
+  Payments: Payment[];
 }

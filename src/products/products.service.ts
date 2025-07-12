@@ -10,11 +10,12 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Store } from 'src/stores/entities/store.entity';
 import { Role, User } from 'src/users/entities/user.entity';
 import { Readable } from 'stream';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { Category } from 'src/category/entities/category.entity';
 
 @Injectable()
 export class ProductsService {
@@ -47,46 +48,22 @@ export class ProductsService {
     createProductDto: CreateProductDto,
     user_id: number,
   ): Promise<Product> {
-    // Find the store and its owner
-    //   const store_owner = await this.storeRepository.findOne({
-    //     where: { id: createProductDto.store },
-    //     relations: ['user'],
-    //   });
-    //   if (!store_owner) {
-    //     throw new NotFoundException('Store not found');
-    //   }
+    console.log('DTO received in controller:', createProductDto);
 
-    //   // Find the user and check their role
-    //  //below line gets the user from the store's repository
-    //   const userRepo = this.storeRepository.manager.getRepository(User);
-    //   const user = await userRepo.findOne({ where: { id: user_id } });
-    //   console.log(user);
-    //   if (!user) {
-    //     throw new NotFoundException('User not found');
-    //   }
-
-    //   // Only allow if user is store owner or admin
-    //   const isStoreOwner = store_owner.user.id === user_id;
-    //   const isAdmin = user.role === Role.ADMIN;
-    //   if (!isStoreOwner && !isAdmin) {
-    //     throw new UnauthorizedException(
-    //       'You are not authorized to create a product for this store',
-    //     );
-    //   }
-    const userRepo = this.storeRepository.manager.getRepository(User);
-    const user = await userRepo.findOne({
-      where: { id: user_id },
-      relations: ['stores'], 
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    // const userRepo = this.storeRepository.manager.getRepository(User);
+    // const user = await userRepo.findOne({
+    //   where: { id: user_id },
+    //   relations: ['stores'], 
+    // });
+    // if (!user) {
+    //   throw new NotFoundException('User not found');
+    // }
 
     // If user has multiple stores, pick the first or handle as needed
-    const userStore = Array.isArray(user.stores) ? user.stores[0] : user.stores;
-    if (!userStore) {
-      throw new NotFoundException('User does not have a store');
-    }
+    // const userStore = Array.isArray(user.stores) ? user.stores[0] : user.stores;
+    // if (!userStore) {
+    //   throw new NotFoundException('User does not have a store');
+    // }
     let imageUrl: string | undefined;
     let publicId: string | undefined;
 
@@ -119,19 +96,31 @@ export class ProductsService {
     } else {
       imageUrl = createProductDto.product_image;
     }
+
+    const categoryRepo = this.storeRepository.manager.getRepository(Category);
+    const categories = await categoryRepo.findBy({
+      id: In(createProductDto.categories),
+    });
+    if (!categories.length) {
+      throw new NotFoundException('Invalid category IDs provided');
+    }
+
     const newProduct = this.productRepository.create({
       product_name: createProductDto.product_name,
       product_description: createProductDto.product_description,
       product_price: createProductDto.product_price,
-      quatity: createProductDto.quatity,
+      quantity: createProductDto.quantity,
       size: createProductDto.size,
       is_available: createProductDto.is_available,
-      product_image: imageUrl,
+      product_image: createProductDto.product_image
+        ? imageUrl
+        : undefined,
       // public_id: publicId,
       stock: createProductDto.stock,
-      store: { id: userStore.id }, 
+      // store: { id: userStore.id },
+      categories: categories,
     });
-
+    console.log(createProductDto);
     const savedProduct = await this.productRepository.save(newProduct);
     return savedProduct;
   }

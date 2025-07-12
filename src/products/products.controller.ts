@@ -17,6 +17,8 @@ export class ProductsController {
   @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Post()
   create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
+    
+    console.log('controller hit');
     return this.productsService.create(createProductDto, req.user.id);
   }
 

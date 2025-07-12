@@ -25,7 +25,7 @@ export class CloudinaryService {
       const uploadStream = this.cloudinary.uploader.upload_stream(
         {
           folder: 'your-folder-name',
-          resource_type: 'auto', // Automatically detect image/video/raw
+          resource_type: 'auto', 
         },
         (error: unknown, result: unknown) => {
           if (error) {
