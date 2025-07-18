@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Role } from 'src/users/entities/user.entity';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @UseGuards(RolesGuard)
 @ApiBearerAuth('access-token')
@@ -21,8 +22,7 @@ export class ProductsController {
     console.log('controller hit');
     return this.productsService.create(createProductDto, req.user.id);
   }
-
-  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+@Public()
   @Get()
   findAll() {
     return this.productsService.findAvailableProducts();

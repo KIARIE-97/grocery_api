@@ -84,6 +84,7 @@ This API uses **JWT Bearer tokens** for secure authentication.
     .addTag('Drivers', 'Driver-specific endpoints')
     .addTag('Products', 'Product management endpoints')
     .addTag('Categories', 'Product category management')
+    .addTag('gemini', 'Gemini AI integration endpoints')
     .addBearerAuth(
       {
         type: 'http',

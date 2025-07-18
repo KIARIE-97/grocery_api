@@ -10,6 +10,7 @@ export enum OStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   PREPARING = 'preparing',
+  READY = 'ready',
   READY_FOR_PICKUP = 'ready_for_pickup',
   OUT_FOR_DELIVERY = 'out_for_delivery',
   DELIVERED = 'delivered',
@@ -23,7 +24,8 @@ export enum paymentMethod {
   DEBIT_CARD = 'debit_card',
   PAYPAL = 'paypal',
   COD = 'cash',
-  WALLET= 'wallet'
+  WALLET= 'wallet',
+  MPESA='mpesa'
 }
 @Entity()
 export class Order {
@@ -33,7 +35,7 @@ export class Order {
   @Column({ nullable: true })
   order_id: string;
 
-  @Column({ unique: true })
+  @Column()
   total_amount: number;
 
   @BeforeInsert()
@@ -49,7 +51,7 @@ export class Order {
   @Column({ type: 'enum', enum: OStatus, default: OStatus.PENDING })
   status: OStatus;
 
-  @Column({ type: 'enum', enum: paymentMethod, default: paymentMethod.COD })
+  @Column({ type: 'enum', enum: paymentMethod, default: paymentMethod.MPESA })
   payment_method: paymentMethod;
 
   @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })

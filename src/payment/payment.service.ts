@@ -50,7 +50,7 @@ export class PaymentService {
       'MPESA_CONSUMER_SECRET',
     );
     const MPESA_SHORTCODE = this.configService.get<string>('MPESA_SHORTCODE');
-    const callbackUrl = 'https://your-callback-url.com'; // Replace with your actual callback URL
+    const callbackUrl = 'https://grocerydelivery-api.onrender.com';
     const passkey = this.configService.get<string>('MPESA_PASSKEY');
 
     if (!MPESA_CONSUMER_KEY) {
@@ -94,36 +94,24 @@ export class PaymentService {
       phone_number: phone_number,
       method: PaymentMethod.MPESA,
     });
-    // Save the newPayment first
-    console.log('Saving newPayment:', newPayment);
+  
     // Link payment on order side
     latestOrder.payment = newPayment;
     latestOrder.payment_status = PaymentStatus.SUCCESS;
     // latestOrder.payment_method = PaymentMethod.MPESA.toString() as any;
-    console.log('Latest order before saving:', latestOrder);
+    // console.log('Latest order before saving:', latestOrder);
 
     // Save order with cascade on payment relation
     const savedOrder = await this.OrderRepository.save(latestOrder);
-    console.log('Order and payment saved:', savedOrder);
-    //   const savedPayment = await this.paymentRepository.save(newPayment);
-    //   console.log('Payment saved:', savedPayment);
+    // console.log('Order and payment saved:', savedOrder);
+   return {
+     message: 'Payment initiated successfully',
+     amount,
+     phone_number,
+     orderId: savedOrder.id,
+     payment_status: savedOrder.payment_status,
+   };
 
-    //   // Now attach it to the latestOrder
-    //   latestOrder.payment_status = PaymentStatus.SUCCESS;
-    //   latestOrder.payment_method = PaymentMethod.MPESA.toString() as any;
-    //   latestOrder.payment = savedPayment;
-
-    //   // Save the updated order
-    //   const savedOrder = await this.OrderRepository.save(latestOrder);
-    //   console.log(
-    //     'Order updated with payment status:',
-    //     savedOrder.payment_status,
-    //   );
-
-    //   return {
-    //     message: 'Payment initiated successfully',
-    //     payment: savedPayment,
-    //   };
   }
 
   async findAll() {

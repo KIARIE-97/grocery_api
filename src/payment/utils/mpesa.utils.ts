@@ -46,14 +46,12 @@ export async function triggerStkPush(
     AccountReference: 'grocerJet',
     TransactionDesc: 'Payment for an order',
   };
-    console.log('first');
 
   const url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
   const auth = 'Bearer ' + accessToken;
-    console.log('second');
   const response = await axios.post(url, payload, {
     headers: { Authorization: auth },
   });
-console.log(`STK Push Response: ${JSON.stringify(response.data)}`);
+// console.log(`STK Push Response: ${JSON.stringify(response.data)}`);
   return response.data;
 }

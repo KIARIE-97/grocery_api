@@ -53,7 +53,7 @@ export class ProductsService {
     // const userRepo = this.storeRepository.manager.getRepository(User);
     // const user = await userRepo.findOne({
     //   where: { id: user_id },
-    //   relations: ['stores'], 
+    //   relations: ['stores'],
     // });
     // if (!user) {
     //   throw new NotFoundException('User not found');
@@ -112,9 +112,7 @@ export class ProductsService {
       quantity: createProductDto.quantity,
       size: createProductDto.size,
       is_available: createProductDto.is_available,
-      product_image: createProductDto.product_image
-        ? imageUrl
-        : undefined,
+      product_image: createProductDto.product_image ? imageUrl : undefined,
       // public_id: publicId,
       stock: createProductDto.stock,
       // store: { id: userStore.id },
@@ -123,6 +121,13 @@ export class ProductsService {
     console.log(createProductDto);
     const savedProduct = await this.productRepository.save(newProduct);
     return savedProduct;
+  }
+  async getProductsByCategories(categories: string[]) {
+    return this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.categories', 'category')
+      .where('category.category_name IN (:...categories)', { categories })
+      .getMany();
   }
 
   async findAvailableProducts() {

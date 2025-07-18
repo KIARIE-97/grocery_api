@@ -126,13 +126,14 @@ export class OrdersService {
 
     if (order.payment_status === PaymentStatus.SUCCESS) {
       await this.decrementStock(
-        createOrderDto.product_ids.map((id: number) => ({ id, quantity: 1 }))
+        createOrderDto.product_ids.map((id: number) => ({ id, quantity: 1 })),
       );
     }
 
     return order;
-
   }
+
+
 
   async assignStore(orderId: number, storeId: number): Promise<Order> {
     const order = await this.OrderRepository.findOne({
@@ -175,10 +176,22 @@ export class OrdersService {
     });
   }
 
+  async updateOrderStatus(orderId: string, newStatus: OStatus): Promise<Order> {
+    const order = await this.OrderRepository.findOne({
+      where: { order_id: orderId },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = newStatus;
+    return await this.OrderRepository.save(order);
+  }
+
   async findOne(id: number) {
     return await this.OrderRepository.findOne({
       where: { id },
-      relations: ['user', 'driver'],
+      relations: ['products'],
     })
       .then((order) => {
         if (!order) {

@@ -34,7 +34,7 @@ export class CreateOrderDto {
     required: true,
   })
   @IsEnum(paymentMethod, { message: 'payment_method' })
-  payment_method: paymentMethod = paymentMethod.COD;
+  payment_method: paymentMethod = paymentMethod.MPESA;
 
   @ApiProperty({
     description: 'The status of the payment',

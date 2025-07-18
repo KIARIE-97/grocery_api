@@ -37,13 +37,13 @@ export class StoresService {
 
   async findAll() {
     return await this.storeRepository.find({
-      relations: ['user'],
+      relations: ['user', 'orders', 'products'],
     });
   }
 
   async findOne(id: number) {
     return await this.storeRepository
-      .findOne({ where: { id }, relations: ['user'] })
+      .findOne({ where: { id }, relations: ['user', 'orders', 'products'] })
       .then((store) => {
         if (!store) {
           throw new NotFoundException(`No store found with id ${id}😬`);
@@ -72,13 +72,14 @@ export class StoresService {
       throw new NotFoundException(`No store found with id ${id}😬`);
     }
     const isStoreOwner = current_user.role === Role.STORE_OWNER;
+    const isAdmin = current_user.role === Role.ADMIN;
 
-    if(isStoreOwner &&  store.user.id !== current_user.id) {
-      throw new ForbiddenException(`You are not authorized to delete this store`);
-    }
+    // if(isStoreOwner || isAdmin &&  store.user.id !== current_user.id) {
+    //   throw new ForbiddenException(`You are not authorized to delete this store`);
+    // }
 
-    if (!isStoreOwner) {
-      throw new ForbiddenException(`Only store owners can delete stores`);
+    if (!isStoreOwner && !isAdmin) {
+      throw new ForbiddenException(`Only store owners and admin can delete stores`);
     }
 
     // Check if the store is verified before deletion

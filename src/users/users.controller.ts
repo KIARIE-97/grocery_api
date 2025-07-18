@@ -8,7 +8,6 @@ import { Role, User } from './entities/user.entity';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { AnyARecord } from 'dns';
 
 export interface AuthenticatedRequest extends Request {
   user: any; 
@@ -23,7 +22,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Roles(Role.ADMIN)
-  // @Public()
+  @Public()
   @Post()
   @ApiOperation({
     summary: 'Create a new user',
@@ -114,7 +113,8 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
+  // @Roles(Role.ADMIN, Role.CUSTOMER, Role.DRIVER, Role.STORE_OWNER)
+  @Public()
   @Patch(':id')
   @ApiOperation({
     summary: 'Update user details',

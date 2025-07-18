@@ -5,12 +5,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as Bcrypt from 'bcrypt';
+import { Order } from 'src/orders/entities/order.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+      @InjectRepository(Order)
+        private readonly OrderRepository: Repository<Order>,
   ) {}
   private async hashData(data: string): Promise<string> {
     const salt = await Bcrypt.genSalt(10);
@@ -59,7 +62,7 @@ export class UsersService {
   async findOneCustomer(id: number): Promise<Partial<User> | string> {
     const customer = await this.userRepository.findOne({
       where: { id, role: Role.CUSTOMER },
-      relations: ['stores', 'orders', 'driver'],
+      relations: ['stores', 'orders', 'orders.products', 'driver'],
     });
     if (!customer) {
       return `No customer found with id ${id}`;
@@ -161,4 +164,32 @@ export class UsersService {
         throw new Error(`Failed to find profile with requestedId ${requestedId}`);
       });
   }
+    async getPreferences(userId: number): Promise<string[]> {
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['orders', 'orders.products'],
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      // If user has no orders, return empty preferences
+      if (!user.orders || user.orders.length === 0) {
+        return []; 
+      }
+      
+      const result = await this.OrderRepository
+        .createQueryBuilder('o')
+        .innerJoin('o.items', 'oi')
+        .innerJoin('oi.product', 'p')
+        .innerJoin('p.category', 'c')
+        .select('c.name', 'category')
+        .addSelect('COUNT(*)', 'frequency')
+        .where('o.customer_id = :userId', { userId })
+        .groupBy('c.name')
+        .orderBy('frequency', 'DESC')
+        .limit(3)
+        .getRawMany();
+  console.log('Preferences:', result);
+      return result.map((r) => r.category);
+    }
 }

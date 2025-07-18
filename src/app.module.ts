@@ -18,6 +18,7 @@ import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaymentModule } from './payment/payment.module';
+import { GeminiModule } from './gemini/gemini.module';
 
 
 @Module({
@@ -71,6 +72,7 @@ import { PaymentModule } from './payment/payment.module';
     MailerModule,
     CloudinaryModule,
     PaymentModule,
+    GeminiModule,
   ],
   controllers: [AppController],
   providers: [

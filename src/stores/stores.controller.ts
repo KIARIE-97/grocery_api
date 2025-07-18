@@ -24,7 +24,7 @@ export class StoresController {
     return this.storesService.create(createStoreDto);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Get()
   @ApiOperation({
     summary: 'Get all stores',
