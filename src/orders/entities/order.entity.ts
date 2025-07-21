@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { Driver } from "src/drivers/entities/driver.entity";
+import { Location } from "src/location/entities/location.entity";
 import { Payment, PaymentStatus } from "src/payment/entities/payment.entity";
 import { Product } from "src/products/entities/product.entity";
 import { Store } from "src/stores/entities/store.entity";
@@ -104,4 +105,9 @@ export class Order {
   })
   @JoinColumn()
   payment?: Relation<Payment>;
+
+  @ManyToOne(() => Location, (location) => location.orders, {
+     onDelete: 'CASCADE',
+      nullable: true })
+  delivery_address: Relation<Location>;
 }

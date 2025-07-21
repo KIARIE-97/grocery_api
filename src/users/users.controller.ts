@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,6 +8,8 @@ import { Role, User } from './entities/user.entity';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LocationService } from 'src/location/location.service';
+import { OwnerType } from 'src/location/entities/location.entity';
 
 export interface AuthenticatedRequest extends Request {
   user: any; 
@@ -19,7 +21,21 @@ export interface AuthenticatedRequest extends Request {
 @Controller('users')
 @ApiUnauthorizedResponse({ description: 'Authentication required' })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService,
+    private readonly locationService: LocationService,
+  ) {}
+  private mapRoleToOwnerType(role: string): OwnerType {
+ switch (role) {
+   case 'customer':
+     return 'user';
+   case 'driver':
+     return 'driver';
+   case 'store_owner':
+     return 'store';
+   default:
+     throw new BadRequestException(`Unsupported role: ${role}`);
+ }
+}
 
   @Roles(Role.ADMIN)
   @Public()
@@ -127,6 +143,32 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @Patch()
+  @ApiOperation({
+    summary: 'Reset user password',
+    description: 'Resets the password for a user by their ID.',
+  })
+  async updateProfile(
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.sub;
+
+    // Handle profile update
+    await this.usersService.update(userId, updateUserDto);
+
+    // If address info is included
+    if (updateUserDto.address) {
+      await this.locationService.createAddress({
+        ...updateUserDto.address,
+        ownerId: userId,
+        ownerType: this.mapRoleToOwnerType(req.user.role),
+      });
+    }
+
+    return this.usersService.findOne(userId);
   }
 
   @Roles(Role.ADMIN, Role.CUSTOMER)

@@ -24,7 +24,7 @@ export class StoresController {
     return this.storesService.create(createStoreDto);
   }
 
-  @Roles(Role.ADMIN, Role.STORE_OWNER)
+  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
   @Get()
   @ApiOperation({
     summary: 'Get all stores',
@@ -37,7 +37,7 @@ export class StoresController {
     return this.storesService.findAll();
   }
 
-  @Roles(Role.ADMIN, Role.STORE_OWNER)
+  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a store by ID',

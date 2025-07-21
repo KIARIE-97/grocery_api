@@ -104,6 +104,7 @@ export class PaymentService {
     // Save order with cascade on payment relation
     const savedOrder = await this.OrderRepository.save(latestOrder);
     // console.log('Order and payment saved:', savedOrder);
+
    return {
      message: 'Payment initiated successfully',
      amount,

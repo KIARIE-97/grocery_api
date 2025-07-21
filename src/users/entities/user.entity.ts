@@ -1,4 +1,5 @@
 import { Driver } from 'src/drivers/entities/driver.entity';
+import { Location } from 'src/location/entities/location.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Payment } from 'src/payment/entities/payment.entity';
 import { Store } from 'src/stores/entities/store.entity';
@@ -92,4 +93,10 @@ export class User {
     nullable: true,
   })
   Payments: Payment[];
+
+  // @OneToMany(() => Location, (location) => location.user, {
+  //   cascade: ['insert', 'update'], // this allows the Location to be created/updated with the user
+  //   nullable: true,
+  // })
+  // addresses: Location[]; 
 }

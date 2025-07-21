@@ -19,6 +19,7 @@ import { createKeyv } from '@keyv/redis';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaymentModule } from './payment/payment.module';
 import { GeminiModule } from './gemini/gemini.module';
+import { LocationModule } from './location/location.module';
 
 
 @Module({
@@ -73,6 +74,7 @@ import { GeminiModule } from './gemini/gemini.module';
     CloudinaryModule,
     PaymentModule,
     GeminiModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [

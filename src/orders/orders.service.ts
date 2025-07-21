@@ -191,7 +191,7 @@ export class OrdersService {
   async findOne(id: number) {
     return await this.OrderRepository.findOne({
       where: { id },
-      relations: ['products'],
+      relations: ['products', 'customer', 'store', 'driver', 'delivery_address', 'payment'],
     })
       .then((order) => {
         if (!order) {
