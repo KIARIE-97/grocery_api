@@ -112,8 +112,15 @@ export class AuthService {
     founduser.is_active = true; // Ensure user is active
 
     await this.saveRefreshToken(founduser.id, refreshToken);
+    // If user is a driver, fetch driver object
+    let driver: Driver | null = null;
+    if (founduser.role === Role.DRIVER) {
+      driver = await this.driverRepository.findOne({
+        where: { user: { id: founduser.id } },
+      });
+    }
 
-    return { founduser, accessToken, refreshToken };
+    return { founduser, accessToken, refreshToken, driver };
   }
 
   //signout

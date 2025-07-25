@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Role } from 'src/users/entities/user.entity';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @UseGuards(RolesGuard)
 @ApiBearerAuth('access-token')
@@ -19,24 +20,29 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto);
   }
 
-  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+  // @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+  @Public()
   @Get()
   findAll() {
     return this.categoryService.findAll();
   }
-  
-  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+
+  @Public()
+  // @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(+id);
   }
-  
+
   @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
     return this.categoryService.update(+id, updateCategoryDto);
   }
-  
+
   @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Delete(':id')
   remove(@Param('id') id: string) {

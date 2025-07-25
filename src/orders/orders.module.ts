@@ -8,13 +8,15 @@ import { User } from 'src/users/entities/user.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { Driver } from 'src/drivers/entities/driver.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { Location } from 'src/location/entities/location.entity';
+import { OrsGeocodingService } from 'src/location/utils/ors.geocoding.service';
 
 @Module({
   imports: [
     DatabaseModule,
-    TypeOrmModule.forFeature([Order, User, Store, Driver, Product]),
-  ], 
+    TypeOrmModule.forFeature([Order, User, Store, Driver, Product, Location]),
+  ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, OrsGeocodingService],
 })
 export class OrdersModule {}

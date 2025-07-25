@@ -9,6 +9,8 @@ import { Order, OStatus } from './entities/order.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { PaymentStatus } from 'src/payment/entities/payment.entity';
+import { Location } from 'src/location/entities/location.entity';
+import { OrsGeocodingService } from 'src/location/utils/ors.geocoding.service';
 
 @Injectable()
 export class OrdersService {
@@ -23,72 +25,10 @@ export class OrdersService {
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    @InjectRepository(Location)
+    private readonly locationRepository: Repository<Location>,
+    private readonly ors: OrsGeocodingService,
   ) {}
-  //   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-  //     // Step 1: Validate Customer
-  //     const customer = await this.userRepository.findOne({
-  //       where: { id: createOrderDto.customer_id },
-  //     });
-  //     if (!customer || customer.role !== Role.CUSTOMER) {
-  //       throw new NotFoundException(
-  //         `Customer with id ${createOrderDto.customer_id} not found or is not a customer🥱`,
-  //       );
-  //     }
-
-  //     // Step 2: Optional - Validate Store
-  //     let store: Store | null = null;
-  //     if (createOrderDto.store_id) {
-  //       store = await this.storeRepository.findOne({
-  //         where: { id: createOrderDto.store_id },
-  //       });
-  //       if (!store) {
-  //         throw new NotFoundException(
-  //           `Store with id ${createOrderDto.store_id} not found`,
-  //         );
-  //       }
-  //     }
-
-  //     // Step 3: Optional - Validate Driver
-  //     let driver: Driver | null = null;
-  //     if (createOrderDto.driver_id) {
-  //       driver = await this.driverRepository.findOne({
-  //         where: { id: createOrderDto.driver_id },
-  //         relations: ['user'],
-  //       });
-  //       if (!driver || driver.user.role !== Role.DRIVER) {
-  //         throw new NotFoundException(
-  //           `Driver with id ${createOrderDto.driver_id} not found or is not a driver🥱`,
-  //         );
-  //       }
-  //     }
-
-  //     // Step 4: Determine Order Status
-  //     let status: OStatus  = OStatus.PENDING; // default
-  //     if (store) status = OStatus.ACCEPTED; // when a store is assigned
-  //     if (store && !driver) status = OStatus.READY_FOR_PICKUP; // ready for pickup by driver
-  //     if (store && driver) status = OStatus.OUT_FOR_DELIVERY; // driver is assigned
-
-  //     // Step 5: Create and Save Order
-  // const deliveryDate = new Date(createOrderDto.delivery_schedule_at);
-  // const deliveryDateString = deliveryDate.toISOString().split('T')[0];
-  //     if (isNaN(deliveryDate.getTime())) {
-  //       throw new BadRequestException('Invalid delivery schedule date');
-  //     }
-
-  //     const newOrder = this.OrderRepository.create({
-  //       total_amount: createOrderDto.total_amount,
-  //       tax_amount: createOrderDto.tax_amount,
-  //       status,
-  //       payment_method: createOrderDto.payment_method,
-  //       payment_status: createOrderDto.payment_status,
-  //       delivery_schedule_at: deliveryDateString,
-  //       driver: driver ? driver.id : undefined,
-  //       customer: customer.id,
-  //       store: store ? store.id : undefined,
-  //     });
-
-  //     return await this.OrderRepository.save(newOrder);
-  //   }
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     const customer = await this.userRepository.findOne({
@@ -114,7 +54,10 @@ export class OrdersService {
     const newOrder = this.OrderRepository.create({
       total_amount: createOrderDto.total_amount,
       tax_amount: createOrderDto.tax_amount,
-      status: OStatus.ACCEPTED,
+      status:
+        createOrderDto.payment_status === PaymentStatus.SUCCESS
+          ? OStatus.ACCEPTED
+          : OStatus.PENDING,
       payment_method: createOrderDto.payment_method,
       payment_status: createOrderDto.payment_status,
       delivery_schedule_at: deliveryDateString,
@@ -133,8 +76,6 @@ export class OrdersService {
     return order;
   }
 
-
-
   async assignStore(orderId: number, storeId: number): Promise<Order> {
     const order = await this.OrderRepository.findOne({
       where: { id: orderId },
@@ -151,9 +92,9 @@ export class OrdersService {
     return await this.OrderRepository.save(order);
   }
 
-  async assignDriver(orderId: number, driverId: number): Promise<Order> {
+  async assignDriver(orderId: string, driverId: number): Promise<Order> {
     const order = await this.OrderRepository.findOne({
-      where: { id: orderId },
+      where: { order_id: orderId },
       relations: ['driver'],
     });
     if (!order) throw new NotFoundException('Order not found');
@@ -166,7 +107,7 @@ export class OrdersService {
       throw new NotFoundException('Driver not found or is not a driver');
     }
 
-    ((order.driver = driver.id), { ...driver });
+    order.driver = driver;
     order.status = OStatus.OUT_FOR_DELIVERY;
     return await this.OrderRepository.save(order);
   }
@@ -191,7 +132,15 @@ export class OrdersService {
   async findOne(id: number) {
     return await this.OrderRepository.findOne({
       where: { id },
-      relations: ['products', 'customer', 'store', 'driver', 'delivery_address', 'payment'],
+      relations: [
+        'products',
+        'customer',
+        'products.store',
+        'products.categories',
+        'driver',
+        'delivery_address',
+        'payment',
+      ],
     })
       .then((order) => {
         if (!order) {
@@ -205,18 +154,139 @@ export class OrdersService {
       });
   }
 
+  private async calculateDeliveryFee(storeLocation: string, deliveryAddress: string): Promise<number> {
+  try {
+    const distance = await this.ors.calculateDistance(
+      storeLocation, 
+      deliveryAddress
+    );
+    return (distance * 10) / 100; // KSH 10 per meter
+  } catch (error) {
+    // this.logger.error('Delivery fee calculation failed', error.stack);
+    console.error('Delivery fee calculation failed:', error);
+    return 0; // Fallback
+  }
+}
+  // async update(id: number, updateOrderDto: UpdateOrderDto) {
+  //   const order = await this.OrderRepository.findOne({
+  //     where: { id },
+  //     relations: ['delivery_address'],
+  //   });
+
+  //   if (!order) {
+  //     throw new NotFoundException(`Order ${id} not found`);
+  //   }
+
+  //   // Handle delivery address update
+  //   if (updateOrderDto.delivery_address) {
+  //     if (order.delivery_address) {
+  //       // Convert UpdateOrderAddressDto to LocationUpdateDto
+  //       const locationUpdate: Partial<Location> = {
+  //         address_line1: updateOrderDto.delivery_address.addressLine1,
+  //         city: updateOrderDto.delivery_address.city,
+  //         state: updateOrderDto.delivery_address.state,
+  //         postalCode: updateOrderDto.delivery_address.postalCode,
+  //         country: updateOrderDto.delivery_address.country,
+  //       };
+
+  //       await this.locationRepository.update(
+  //         order.delivery_address.id,
+  //         locationUpdate,
+  //       );
+  //     } else {
+  //       // Create new address
+  //       const newAddress = this.locationRepository.create({
+  //         ...updateOrderDto.delivery_address,
+  //         ownerType: 'order',
+  //         ownerId: id.toString(),
+  //       });
+  //       await this.locationRepository.save(newAddress);
+  //       order.delivery_address = newAddress;
+  //       await this.OrderRepository.save(order);
+  //     }
+  //   }
+
+  //   // Handle other updates
+  //   const { delivery_address, ...rest } = updateOrderDto;
+  //   await this.OrderRepository.update(id, rest);
+
+  //   return this.OrderRepository.findOne({
+  //     where: { id },
+  //     relations: ['delivery_address'],
+  //   });
+  // }
+
+  // In your OrderService:
   async update(id: number, updateOrderDto: UpdateOrderDto) {
-    // Convert delivery_schedule_at to ISO string if it's a number
-    let updateData: any = { ...updateOrderDto };
-    if (typeof updateOrderDto.delivery_schedule_at === 'number') {
-      const date = new Date(updateOrderDto.delivery_schedule_at);
-      if (isNaN(date.getTime())) {
-        throw new BadRequestException('Invalid delivery schedule date');
-      }
-      updateData.delivery_schedule_at = date.toISOString().split('T')[0];
+    const order = await this.OrderRepository.findOne({
+      where: { id },
+      relations: ['store', 'delivery_address'], // Ensure these relations are loaded
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${id} not found`);
     }
-    await this.OrderRepository.update(id, updateData);
-    return await this.findOne(id);
+
+    // Store the original delivery address for comparison
+    // const originalDeliveryAddressId = order.delivery_address?.id;
+
+    // Convert delivery_address_id to the relation
+    if (updateOrderDto.delivery_address_id) {
+      const location = await this.locationRepository.findOne({
+        where: { id: Number(updateOrderDto.delivery_address_id) },
+      });
+      if (!location) {
+        throw new NotFoundException('Delivery location not found');
+      }
+      order.delivery_address = { ...location } as any;
+      delete updateOrderDto.delivery_address_id;
+    }
+
+      if (updateOrderDto.store_id) {
+        const store = await this.storeRepository.findOne({
+          where: { id: Number(updateOrderDto.store_id) },
+        });
+        if (!store) {
+          throw new NotFoundException('Store not found');
+        }
+        order.store = store;
+        delete updateOrderDto.store_id;
+      }
+    // Calculate delivery fee if:
+    // // 1. Delivery address was changed OR
+    // // 2. Store was changed (if store_id is in update DTO)
+    // const shouldCalculateFee =
+    //   (updateOrderDto.delivery_address_id &&
+    //     originalDeliveryAddressId !==
+    //       Number(updateOrderDto.delivery_address_id)) ||
+    //   (updateOrderDto.store_id && order.store?.id !== updateOrderDto.store_id);
+
+    // if (shouldCalculateFee && order.store && order.delivery_address) {
+    //   try {
+    //     const distance = await this.ors.calculateDistance(
+    //       order.store.location,
+    //       order.delivery_address.addressLine1,
+    //     );
+    //     // KSH 10 per meter
+    //     order.delivery_fee = (distance * 10) / 100; // Convert to currency
+    //   } catch (error) {
+    //     console.error('Failed to calculate delivery fee:', error);
+    //     // You can choose to throw an error or continue with default fee
+        // order.delivery_fee = 0; // Default value
+      // }
+    // }
+    if (order.store && order.delivery_address) {
+      order.delivery_fee = await this.calculateDeliveryFee(
+        order.store.location,
+        order.delivery_address.addressLine1,
+      );
+    }
+    console.log('order', order);
+console.log('store', order.store);
+    // Merge other updates
+    this.OrderRepository.merge(order, updateOrderDto);
+
+    return this.OrderRepository.save(order);
   }
 
   async remove(id: number, currentUser: User): Promise<any> {
@@ -252,7 +322,7 @@ export class OrdersService {
     }
 
     // Driver can cancel only their assigned order
-    if (isDriver && (!order.driver || order.driver !== currentUser.id)) {
+    if (isDriver && (!order.driver || order.driver.id !== currentUser.id)) {
       throw new ForbiddenException(
         'You can only cancel orders assigned to you',
       );

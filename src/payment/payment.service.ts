@@ -94,7 +94,7 @@ export class PaymentService {
       phone_number: phone_number,
       method: PaymentMethod.MPESA,
     });
-  
+
     // Link payment on order side
     latestOrder.payment = newPayment;
     latestOrder.payment_status = PaymentStatus.SUCCESS;
@@ -105,18 +105,24 @@ export class PaymentService {
     const savedOrder = await this.OrderRepository.save(latestOrder);
     // console.log('Order and payment saved:', savedOrder);
 
-   return {
-     message: 'Payment initiated successfully',
-     amount,
-     phone_number,
-     orderId: savedOrder.id,
-     payment_status: savedOrder.payment_status,
-   };
-
+    return {
+      message: 'Payment initiated successfully',
+      amount,
+      phone_number,
+      orderId: savedOrder.id,
+      payment_status: savedOrder.payment_status,
+    };
   }
 
   async findAll() {
     return this.paymentRepository.find({
+      relations: ['user', 'order'],
+    });
+  }
+
+  async findPaymentsByUser(userId: number) {
+    return this.paymentRepository.find({
+      where: { user: { id: userId } },
       relations: ['user', 'order'],
     });
   }

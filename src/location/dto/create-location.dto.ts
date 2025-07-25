@@ -16,6 +16,7 @@ export class CreateLocationDto {
     description: 'Label for the location (e.g. Home, Work)',
   })
   @IsString()
+  @IsOptional()
   label: string;
 
   @IsOptional()

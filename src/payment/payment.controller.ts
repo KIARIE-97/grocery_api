@@ -41,6 +41,12 @@ export class PaymentController {
   findAll() {
     return this.paymentService.findAll();
   }
+
+   @Get('user/:userId')
+  async getPaymentsByUser(@Param('userId') userId: number) {
+    return this.paymentService.findPaymentsByUser(userId);
+  }
+  
   // Removed broken getMyProfile endpoint
   @Get(':id')
   findOne(@Param('id') id: string) {

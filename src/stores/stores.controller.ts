@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags, ApiUnauthorizedRespo
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/users/entities/user.entity';
 import { Roles } from 'src/auth/decorators/role.decorator';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @UseGuards(RolesGuard)
 @ApiBearerAuth('access-token')
@@ -23,8 +24,8 @@ export class StoresController {
   create(@Body() createStoreDto: CreateStoreDto) {
     return this.storesService.create(createStoreDto);
   }
-
-  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+@Public()
+  // @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
   @Get()
   @ApiOperation({
     summary: 'Get all stores',
@@ -50,6 +51,21 @@ export class StoresController {
   })
   findOne(@Param('id') id: string) {
     return this.storesService.findOne(+id);
+  }
+
+  @Roles(Role.ADMIN, Role.STORE_OWNER)
+  @Get(':id/orders')
+  @ApiOperation({
+    summary: 'Get all orders for a store',
+    description:
+      'This endpoint retrieves all orders that contain products from the specified store.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Unauthorized access. You must be logged in to view store orders.',
+  })
+  getOrdersForStore(@Param('id', ParseIntPipe) id: number) {
+    return this.storesService.getOrdersForStore(id);
   }
 
   @Roles(Role.ADMIN, Role.STORE_OWNER)

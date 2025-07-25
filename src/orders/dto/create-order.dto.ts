@@ -52,6 +52,15 @@ export class CreateOrderDto {
   delivery_schedule_at: string;
 
   @ApiProperty({
+    description: 'The delivery fee for the order',
+    example: '5.00',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  delivery_fee?: number;
+
+  @ApiProperty({
     description: 'The driver id',
     example: '1',
     required: false,
@@ -67,7 +76,7 @@ export class CreateOrderDto {
   })
   @IsOptional()
   @IsNumber()
-  store_id: number;
+  store_id: string;
 
   @ApiProperty({
     description: 'The customer id',
@@ -86,4 +95,20 @@ export class CreateOrderDto {
   @ArrayNotEmpty()
   @IsNumber({}, { each: true })
   product_ids: number[];
+
+  @ApiProperty({
+    description: 'The delivery address',
+    example: {
+      street: '123 Main St',
+      city: 'Lagos',
+      state: 'Lagos',
+      country: 'Nigeria',
+      postal_code: '100001',
+      latitude: 6.5244,
+      longitude: 3.3792,
+    },
+    required: false,
+  })
+  @IsOptional()
+  delivery_address_id: string;
 }

@@ -26,7 +26,7 @@ export class DriversController {
     return this.driversService.create(createDriverDto);
   }
   
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.DRIVER, Role.CUSTOMER, Role.STORE_OWNER)
   @Get()
   @ApiOperation({
     summary: 'Get all drivers',
@@ -51,7 +51,7 @@ export class DriversController {
     return this.driversService.findAll();
   }
  
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.DRIVER, Role.CUSTOMER, Role.STORE_OWNER)
   @Get(':id')
   @ApiOperation({
     summary: 'Get driver by ID',
@@ -62,7 +62,7 @@ export class DriversController {
     return this.driversService.findOne(id);
   }
  
-  @Roles(Role.ADMIN, Role.DRIVER)
+  @Roles(Role.ADMIN, Role.DRIVER, Role.CUSTOMER)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update driver details',

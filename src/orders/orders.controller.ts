@@ -37,13 +37,15 @@ export class OrdersController {
     return this.ordersService.findOne(+id);
   }
 
-  @Roles(Role.STORE_OWNER)
+  @Roles(Role.STORE_OWNER, Role.DRIVER)
   @Patch(':orderId/status')
   async updateOrderStatus(
     @Param('orderId') orderId: string,
     @Body() updateStatusDto: UpdateStatusDto,
   ) {
-    console.log(`Updating order status for order_id: ${orderId} to ${updateStatusDto.status}`);
+    console.log(
+      `Updating order status for order_id: ${orderId} to ${updateStatusDto.status}`,
+    );
     return this.ordersService.updateOrderStatus(
       orderId,
       updateStatusDto.status,
@@ -62,7 +64,7 @@ export class OrdersController {
   @Roles(Role.ADMIN, Role.STORE_OWNER, Role.DRIVER, Role.CUSTOMER)
   @Patch(':orderId/assign-driver/:driverId')
   async assignDriver(
-    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('orderId') orderId: string,
     @Param('driverId', ParseIntPipe) driverId: number,
   ) {
     return this.ordersService.assignDriver(orderId, driverId);

@@ -28,6 +28,8 @@ export enum paymentMethod {
   WALLET= 'wallet',
   MPESA='mpesa'
 }
+
+
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('increment')
@@ -61,6 +63,9 @@ export class Order {
   @Column('date')
   delivery_schedule_at: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
+  delivery_fee: number;
+
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
@@ -79,7 +84,7 @@ export class Order {
     nullable: true,
     onDelete: 'SET NULL',
   })
-  driver: Driver['id'];
+  driver: Driver;
 
   @ManyToOne(() => Store, (store) => store.orders, {
     cascade: true, //this allows the store to be created/updated/deleted with the order
@@ -110,4 +115,6 @@ export class Order {
      onDelete: 'CASCADE',
       nullable: true })
   delivery_address: Relation<Location>;
+
+  
 }

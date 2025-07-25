@@ -2,12 +2,12 @@ import { Order } from "src/orders/entities/order.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
-export type OwnerType = 'user' | 'store' | 'driver';
+export type OwnerType = 'user' | 'store' | 'driver' | 'order';
 
 @Entity()
 export class Location {
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   //   @ManyToOne(() => User, (user) => user.addresses, {
   //     onDelete: 'CASCADE',
