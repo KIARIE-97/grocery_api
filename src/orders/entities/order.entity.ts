@@ -48,6 +48,12 @@ export class Order {
     this.order_id = `${prefix}${uniqueCode}`;
   }
 
+  @Column({ nullable: true })
+  deliveryOtp: string;
+
+  @Column({ nullable: true })
+  deliveryOtpGeneratedAt: Date;
+
   @Column()
   tax_amount: number;
 
@@ -63,7 +69,13 @@ export class Order {
   @Column('date')
   delivery_schedule_at: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
   delivery_fee: number;
 
   @Column({
@@ -112,9 +124,8 @@ export class Order {
   payment?: Relation<Payment>;
 
   @ManyToOne(() => Location, (location) => location.orders, {
-     onDelete: 'CASCADE',
-      nullable: true })
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   delivery_address: Relation<Location>;
-
-  
 }

@@ -10,6 +10,7 @@ import { Driver } from 'src/drivers/entities/driver.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { Location } from 'src/location/entities/location.entity';
 import { OrsGeocodingService } from 'src/location/utils/ors.geocoding.service';
+import { AppMailerService } from 'src/mailer/mailer.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { OrsGeocodingService } from 'src/location/utils/ors.geocoding.service';
     TypeOrmModule.forFeature([Order, User, Store, Driver, Product, Location]),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, OrsGeocodingService],
+  providers: [OrdersService, OrsGeocodingService, AppMailerService],
 })
 export class OrdersModule {}

@@ -23,6 +23,16 @@ export class OrdersController {
     return this.ordersService.createOrder(createOrderDto);
   }
 
+  @Post('delivery-otp/generate')
+  async generateOtp(@Body('orderId') orderId: string) {
+    return this.ordersService.generateDeliveryOtp(orderId);
+  }
+
+  @Post('delivery-otp/verify')
+  async verifyOtp(@Body('orderId') orderId: string, @Body('otp') otp: string) {
+    return this.ordersService.verifyDeliveryOtp(orderId, otp);
+  }
+
   // @Roles(Role.ADMIN, Role.STORE_OWNER)
   @Public()
   @Get()

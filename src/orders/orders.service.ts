@@ -11,6 +11,8 @@ import { Product } from 'src/products/entities/product.entity';
 import { PaymentStatus } from 'src/payment/entities/payment.entity';
 import { Location } from 'src/location/entities/location.entity';
 import { OrsGeocodingService } from 'src/location/utils/ors.geocoding.service';
+import { AppMailerService } from 'src/mailer/mailer.service';
+import * as otpGenerator from 'otp-generator';
 
 @Injectable()
 export class OrdersService {
@@ -28,6 +30,7 @@ export class OrdersService {
     @InjectRepository(Location)
     private readonly locationRepository: Repository<Location>,
     private readonly ors: OrsGeocodingService,
+    private readonly mailerService: AppMailerService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -78,7 +81,7 @@ export class OrdersService {
 
   async assignStore(orderId: number, storeId: number): Promise<Order> {
     const order = await this.OrderRepository.findOne({
-      where: { id: orderId },
+      where: { id: Number(orderId) },
     });
     if (!order) throw new NotFoundException('Order not found');
 
@@ -154,19 +157,22 @@ export class OrdersService {
       });
   }
 
-  private async calculateDeliveryFee(storeLocation: string, deliveryAddress: string): Promise<number> {
-  try {
-    const distance = await this.ors.calculateDistance(
-      storeLocation, 
-      deliveryAddress
-    );
-    return (distance * 10) / 100; // KSH 10 per meter
-  } catch (error) {
-    // this.logger.error('Delivery fee calculation failed', error.stack);
-    console.error('Delivery fee calculation failed:', error);
-    return 0; // Fallback
+  private async calculateDeliveryFee(
+    storeLocation: string,
+    deliveryAddress: string,
+  ): Promise<number> {
+    try {
+      const distance = await this.ors.calculateDistance(
+        storeLocation,
+        deliveryAddress,
+      );
+      return (distance * 10) / 100; // KSH 10 per meter
+    } catch (error) {
+      // this.logger.error('Delivery fee calculation failed', error.stack);
+      console.error('Delivery fee calculation failed:', error);
+      return 0; // Fallback
+    }
   }
-}
   // async update(id: number, updateOrderDto: UpdateOrderDto) {
   //   const order = await this.OrderRepository.findOne({
   //     where: { id },
@@ -242,16 +248,16 @@ export class OrdersService {
       delete updateOrderDto.delivery_address_id;
     }
 
-      if (updateOrderDto.store_id) {
-        const store = await this.storeRepository.findOne({
-          where: { id: Number(updateOrderDto.store_id) },
-        });
-        if (!store) {
-          throw new NotFoundException('Store not found');
-        }
-        order.store = store;
-        delete updateOrderDto.store_id;
+    if (updateOrderDto.store_id) {
+      const store = await this.storeRepository.findOne({
+        where: { id: Number(updateOrderDto.store_id) },
+      });
+      if (!store) {
+        throw new NotFoundException('Store not found');
       }
+      order.store = store;
+      delete updateOrderDto.store_id;
+    }
     // Calculate delivery fee if:
     // // 1. Delivery address was changed OR
     // // 2. Store was changed (if store_id is in update DTO)
@@ -272,8 +278,8 @@ export class OrdersService {
     //   } catch (error) {
     //     console.error('Failed to calculate delivery fee:', error);
     //     // You can choose to throw an error or continue with default fee
-        // order.delivery_fee = 0; // Default value
-      // }
+    // order.delivery_fee = 0; // Default value
+    // }
     // }
     if (order.store && order.delivery_address) {
       order.delivery_fee = await this.calculateDeliveryFee(
@@ -282,7 +288,7 @@ export class OrdersService {
       );
     }
     console.log('order', order);
-console.log('store', order.store);
+    console.log('store', order.store);
     // Merge other updates
     this.OrderRepository.merge(order, updateOrderDto);
 
@@ -406,5 +412,66 @@ console.log('store', order.store);
 
       await this.productRepository.save(product); // Persist the updated stock
     }
+  }
+
+  async generateDeliveryOtp(orderId: string) {
+    // Find the order with user relations
+    const order = await this.OrderRepository.findOne({
+      where: { order_id: orderId },
+      relations: ['customer'],
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.status !== 'out_for_delivery') {
+      throw new Error('Order is not out for delivery');
+    }
+
+    // Generate OTP (6-digit numeric)
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+    });
+    // Update order with OTP
+    order.deliveryOtp = otp;
+    await this.OrderRepository.save(order);
+
+    // Send OTP email to customer
+    try {
+      await this.mailerService.sendDeliveryOtpMail(
+        order.customer.email,
+        order.customer.full_name,
+        otp,
+        order.order_id,
+      );
+    } catch (err) {
+      console.error('Error sending delivery OTP email:', err);
+      throw new Error('Failed to send OTP email');
+    }
+
+    return { success: true, message: 'OTP sent to customer' };
+  }
+  async verifyDeliveryOtp(orderId: string, otp: string) {
+    const order = await this.OrderRepository.findOne({
+      where: { order_id: orderId },
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.deliveryOtp !== otp) {
+      throw new Error('Invalid OTP');
+    }
+
+    // Update order status and clear OTP
+    order.status = OStatus.DELIVERED;
+    order.deliveryOtp = '';
+    await this.OrderRepository.save(order);
+
+    return { success: true, message: 'Order delivered successfully' };
   }
 }
