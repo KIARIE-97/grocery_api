@@ -49,7 +49,10 @@ return savedDriver;
 
   async findOne(id: number): Promise<Driver | string> {
     return await this.driverRepository
-      .findOne({ where: { id }, relations: ['user', 'orders'] })
+      .findOne({
+        where: { id },
+        relations: ['user', 'orders', 'orders.delivery_address'],
+      })
       .then((driver) => {
         if (!driver) {
           return `No driver found with id ${id}😬`;

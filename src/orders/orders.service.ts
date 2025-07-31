@@ -48,6 +48,18 @@ export class OrdersService {
     }
     const products = await this.validateProducts(createOrderDto.product_ids);
 
+    // Get the store from the first product
+    const store = products[0]?.store;
+    if (!store) {
+      throw new BadRequestException('Store not found for selected products');
+    }
+
+    // Optionally, ensure all products are from the same store
+    const allSameStore = products.every((p) => p.store.id === store.id);
+    if (!allSameStore) {
+      throw new BadRequestException('All products must be from the same store');
+    }
+
     const deliveryDate = new Date(createOrderDto.delivery_schedule_at);
     const deliveryDateString = deliveryDate.toISOString().split('T')[0];
     if (isNaN(deliveryDate.getTime())) {
@@ -66,6 +78,7 @@ export class OrdersService {
       delivery_schedule_at: deliveryDateString,
       customer,
       products,
+      store,
     });
 
     const order = await this.OrderRepository.save(newOrder);
@@ -116,7 +129,13 @@ export class OrdersService {
   }
   async findAll() {
     return this.OrderRepository.find({
-      relations: ['products', 'customer', 'store', 'driver'],
+      relations: [
+        'products',
+        'customer',
+        'store',
+        'driver',
+        'delivery_address',
+      ],
     });
   }
 
@@ -365,8 +384,9 @@ export class OrdersService {
   }
   async validateProducts(productIds: number[]): Promise<Product[]> {
     // Fetch all matching products from DB- the join table order_items
-    const products = await this.productRepository.findBy({
-      id: In(productIds),
+    const products = await this.productRepository.find({
+      where: { id: In(productIds) },
+      relations: ['store'],
     });
 
     // Ensure all products exist
@@ -435,24 +455,17 @@ export class OrdersService {
       specialChars: false,
       lowerCaseAlphabets: false,
     });
+
     // Update order with OTP
     order.deliveryOtp = otp;
     await this.OrderRepository.save(order);
 
-    // Send OTP email to customer
-    try {
-      await this.mailerService.sendDeliveryOtpMail(
-        order.customer.email,
-        order.customer.full_name,
-        otp,
-        order.order_id,
-      );
-    } catch (err) {
-      console.error('Error sending delivery OTP email:', err);
-      throw new Error('Failed to send OTP email');
-    }
-
-    return { success: true, message: 'OTP sent to customer' };
+    // Return the OTP directly instead of emailing it
+    return {
+      success: true,
+      message: 'OTP generated successfully',
+      otp: otp, // Include the OTP in the response
+    };
   }
   async verifyDeliveryOtp(orderId: string, otp: string) {
     const order = await this.OrderRepository.findOne({

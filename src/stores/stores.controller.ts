@@ -38,7 +38,7 @@ export class StoresController {
     return this.storesService.findAll();
   }
 
-  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER)
+  @Roles(Role.ADMIN, Role.STORE_OWNER, Role.CUSTOMER, Role.DRIVER)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a store by ID',

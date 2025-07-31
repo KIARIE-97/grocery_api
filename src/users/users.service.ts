@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,6 @@ import { Role, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as Bcrypt from 'bcrypt';
 import { Order } from 'src/orders/entities/order.entity';
-import { OwnerType } from 'src/location/entities/location.entity';
 
 @Injectable()
 export class UsersService {
@@ -64,7 +63,7 @@ export class UsersService {
   async findOneCustomer(id: number): Promise<Partial<User> | string> {
     const customer = await this.userRepository.findOne({
       where: { id, role: Role.CUSTOMER },
-      relations: ['stores', 'orders', 'orders.products', 'driver'],
+      relations: ['stores', 'orders', 'orders.products', 'driver', 'Payments'],
     });
     if (!customer) {
       return `No customer found with id ${id}`;
