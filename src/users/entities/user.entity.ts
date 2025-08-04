@@ -4,8 +4,10 @@ import { Order } from 'src/orders/entities/order.entity';
 import { Payment } from 'src/payment/entities/payment.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import {
-    Column,
+  Column,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -17,7 +19,7 @@ export enum Role {
   STORE_OWNER = 'store_owner',
   DRIVER = 'driver',
   ADMIN = 'admin',
-  SUB_ADMIN = 'admin_sub',
+  SUPPLIER = 'supplier',
 }
 
 export enum UStatus {
@@ -54,10 +56,10 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.CUSTOMER })
   role: Role;
 
-  @Column({type: 'text', nullable: true, default: null})
+  @Column({ type: 'text', nullable: true, default: null })
   profile_url: string;
 
-  @Column({type: 'boolean', default: false})
+  @Column({ type: 'boolean', default: false })
   is_active: boolean;
 
   @Column({
@@ -94,9 +96,9 @@ export class User {
   })
   Payments: Payment[];
 
-  // @OneToMany(() => Location, (location) => location.user, {
-  //   cascade: ['insert', 'update'], // this allows the Location to be created/updated with the user
-  //   nullable: true,
-  // })
-  // addresses: Location[]; 
-}
+ @ManyToMany(() => Store, (store) => store.suppliers, {
+    cascade: ['insert', 'update'], 
+    nullable: true,})
+  @JoinTable({ name: 'user_store_suppliers' })  
+  suppliers: Store[];
+  }

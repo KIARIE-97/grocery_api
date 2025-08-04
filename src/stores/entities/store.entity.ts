@@ -1,7 +1,7 @@
 import { Order } from "src/orders/entities/order.entity";
 import { Product } from "src/products/entities/product.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 export enum SStatus{
     ACTIVE= 'active',
@@ -53,8 +53,9 @@ export class Store {
 
 
   @ManyToOne(() => User, (user) => user.id, {
-    cascade: true,
+    // cascade: true,
     onDelete: 'CASCADE',
+    nullable: false,
   })
     user: User;
 
@@ -69,4 +70,9 @@ export class Store {
     nullable: true,
    })
     products: Product[];
+   
+  @ManyToMany(() => User, (user) => user.suppliers, {
+    nullable: true,
+  })
+  suppliers: User[];
 }
