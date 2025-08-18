@@ -30,7 +30,7 @@ export class StoresService {
     }
     const newStore = this.storeRepository.create({
       store_name: createStoreDto.store_name,
-      location: createStoreDto.location,
+      // location: createStoreDto.location,
       is_verified: false,
       user: existingUser,
     });

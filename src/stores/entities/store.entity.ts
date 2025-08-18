@@ -1,7 +1,8 @@
+import { Location } from "src/location/entities/location.entity";
 import { Order } from "src/orders/entities/order.entity";
 import { Product } from "src/products/entities/product.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export enum SStatus{
     ACTIVE= 'active',
@@ -12,12 +13,13 @@ export enum SStatus{
 export class Store {
   @PrimaryGeneratedColumn('increment')
   id: number;
-  
+
   @Column()
   store_name: string;
 
-  @Column()
-  location: string;
+  @OneToOne(() => Location, (location) => location.store)
+  @JoinColumn()
+  location: Location;
 
   @Column()
   is_verified: boolean;
@@ -34,7 +36,7 @@ export class Store {
   @Column({ nullable: true })
   shop_image: string;
 
-  @Column({type: 'enum', enum: SStatus, default: SStatus.ACTIVE})
+  @Column({ type: 'enum', enum: SStatus, default: SStatus.ACTIVE })
   status: SStatus;
 
   @Column({
@@ -50,27 +52,25 @@ export class Store {
   })
   updated_at: Date;
 
-
-
   @ManyToOne(() => User, (user) => user.id, {
     // cascade: true,
     onDelete: 'CASCADE',
     nullable: false,
   })
-    user: User;
+  user: User;
 
   @OneToMany(() => Order, (order) => order.store, {
-      cascade: ['insert', 'update'], // this allows the order to be created/updated/deleted with the store
-      nullable: true,
-    })
-    orders: Order[]; 
-     
-   @OneToMany(() => Product, (product) => product.store, {
+    cascade: ['insert', 'update'], // this allows the order to be created/updated/deleted with the store
+    nullable: true,
+  })
+  orders: Order[];
+
+  @OneToMany(() => Product, (product) => product.store, {
     cascade: ['insert', 'update'], // this allows the product to be created/updated/deleted with the store
     nullable: true,
-   })
-    products: Product[];
-   
+  })
+  products: Product[];
+
   @ManyToMany(() => User, (user) => user.suppliers, {
     nullable: true,
   })

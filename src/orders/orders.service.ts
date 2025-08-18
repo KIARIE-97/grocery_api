@@ -302,7 +302,7 @@ export class OrdersService {
     // }
     if (order.store && order.delivery_address) {
       order.delivery_fee = await this.calculateDeliveryFee(
-        order.store.location,
+        order.store.location.addressLine1,
         order.delivery_address.addressLine1,
       );
     }

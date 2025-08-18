@@ -1,6 +1,8 @@
 import { Order } from "src/orders/entities/order.entity";
+import { Store } from "src/stores/entities/store.entity";
+import { Supplier } from "src/supplier/entities/supplier.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export type OwnerType = 'user' | 'store' | 'driver' | 'order';
 
@@ -68,4 +70,15 @@ export class Location {
     nullable: true,
   })
   orders: Order[];
+
+  @OneToOne(() => Store, (store) => store.location)
+  @JoinColumn()
+  store: Store;
+
+  @OneToOne(() => Supplier, (supplier) => supplier.warehouse_location, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  supplier: Supplier;
 }

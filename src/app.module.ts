@@ -20,6 +20,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaymentModule } from './payment/payment.module';
 import { GeminiModule } from './gemini/gemini.module';
 import { LocationModule } from './location/location.module';
+import { SupplierModule } from './supplier/supplier.module';
 
 
 @Module({
@@ -75,6 +76,7 @@ import { LocationModule } from './location/location.module';
     PaymentModule,
     GeminiModule,
     LocationModule,
+    SupplierModule,
   ],
   controllers: [AppController],
   providers: [

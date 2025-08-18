@@ -3,6 +3,7 @@ import { Location } from 'src/location/entities/location.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Payment } from 'src/payment/entities/payment.entity';
 import { Store } from 'src/stores/entities/store.entity';
+import { Supplier } from 'src/supplier/entities/supplier.entity';
 import {
   Column,
   Entity,
@@ -96,9 +97,16 @@ export class User {
   })
   Payments: Payment[];
 
- @ManyToMany(() => Store, (store) => store.suppliers, {
-    cascade: ['insert', 'update'], 
-    nullable: true,})
-  @JoinTable({ name: 'user_store_suppliers' })  
+  @ManyToMany(() => Store, (store) => store.suppliers, {
+    cascade: ['insert', 'update'],
+    nullable: true,
+  })
+  @JoinTable({ name: 'user_store_suppliers' })
   suppliers: Store[];
-  }
+
+  @OneToOne(() => Supplier, (profile) => profile.user, {
+    cascade: true,
+    nullable: true,
+  })
+  supplier?: Supplier;
+}
